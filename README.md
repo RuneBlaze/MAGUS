@@ -1,6 +1,16 @@
 # MAGUS
 Multiple Sequence Alignment using Graph Clustering
 
+This is a personal fork of the original version,
+with code-name `MagusNight`. There are several goals:
+
+ - Parallelize the GCM A* trace-search process
+   - An experimental Julia rewrite has been done
+   - Now the plan is to change A* to HDA*
+- Swap out the clustering step of GCM
+
+The original description is below:
+
 - - - -
 
 ## Purpose and Functionality

@@ -8,6 +8,7 @@ import os
 import time
 
 from helpers import sequenceutils
+from shutil import which
 
 class Configs:
     
@@ -44,13 +45,13 @@ class Configs:
     recurseThreshold = 200
     
     clustalPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/clustal/clustalo")
-    mafftPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/mafft/mafft")
-    mclPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/mcl/bin/mcl")
+    mafftPath = which("mafft")
+    mclPath = which("mcl")
     mlrmclPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/mlrmcl/mlrmcl")
-    hmmalignPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/hmmer/hmmalign")
-    hmmbuildPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/hmmer/hmmbuild")
-    hmmsearchPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/hmmer/hmmsearch")
-    fasttreePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/fasttree/FastTreeMP")
+    hmmalignPath = which("hmmalign")
+    hmmbuildPath = which("hmmbuild")
+    hmmsearchPath = which("hmmsearch")
+    fasttreePath = which("FastTree")
     raxmlPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/raxmlng/raxml-ng")
     
     logPath = None
@@ -138,6 +139,7 @@ def buildConfigs(args):
     
     Configs.graphBuildMethod = args.graphbuildmethod
     Configs.graphBuildHmmExtend = args.graphbuildhmmextend.lower() == "true"
+    # print(Configs.graphBuildHmmExtend)
     Configs.graphBuildRestrict = args.graphbuildrestrict.lower() == "true"
     Configs.graphClusterMethod = args.graphclustermethod
     Configs.graphTraceMethod = args.graphtracemethod

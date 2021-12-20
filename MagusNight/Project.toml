@@ -1,0 +1,10 @@
+name = "MagusNight"
+uuid = "3aeb349f-d78a-4cb5-9602-d865f41cffcc"
+authors = ["runeblaze <runeblaze@excite.co.jp>"]
+version = "0.1.0"
+
+[deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Debugger = "31a5f54b-26ea-5ae9-a837-f05ce5417438"
+Parsers = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
