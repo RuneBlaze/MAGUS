@@ -24,7 +24,7 @@ function run_benchmark()
 end
 
 function main_task()
-    workingdir = "../../Downloads/for_chengze/magus10krun_norecurse/"
+    workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
     b = glob(joinpath(workingdir, "subalignments","*"))
     sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
     context = AlnContext(workingdir, b)
@@ -32,8 +32,10 @@ function main_task()
     purge_duplicate_clusters(g)
     purge_cluster_violations(g)
     min_clusters_search(g)
-    dump_clusters_to_file(g, "clusters.julia.txt")
+    dump_clusters_to_file(g, "scratch/clusters.julia.txt")
 end
 
-run_benchmark()
+main_task()
+
+# run_benchmark()
 # Profile.print()

@@ -132,7 +132,9 @@ def parseArgs():
     
     parser.add_argument("--alignsizelimit", type=float,
                         help="Size threshold for alignment compression (in GB)", required=False, default=100)
-       
+    
+    parser.add_argument("-j", "--julia", action="store_true", help="use Julia to speed-up the trace-finding process")
+    
     return parser.parse_args()
 
 if __name__ == '__main__':

@@ -177,3 +177,4 @@ docs/site/
 Manifest.toml
 
 scratch/
+.DS_Store

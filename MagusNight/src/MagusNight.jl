@@ -48,6 +48,50 @@ function read_seqlen_from_fasta(filename :: AbstractString)
     end
 end
 
+function from_python_alngraph(pgraph)
+    from = pgraph
+    alnlengths = pgraph.subalignmentLengths
+
+    size = sum(alnlengths)
+    @show size, alnlengths
+    subset_matrix_ind = zeros(Int, length(alnlengths))
+    for k in 2:length(alnlengths)
+        # some sort of prefix sum that I don't understand
+        subset_matrix_ind[k] = subset_matrix_ind[k-1] + alnlengths[k-1]
+    end
+    
+    mat_subposmap = Vector{Tuple{Int, Int}}(undef, size)
+    i = 1
+    for k in 1:length(alnlengths)
+        for j in 1:alnlengths[k]
+            mat_subposmap[i] = (k, j)
+            i += 1
+        end
+    end
+
+    pymatrix = from.matrix
+    matrix = Vector{TDict{Int, Int}}(undef, size)
+    for i = 1:size
+        matrix[i] = TDict{Int, Int}()
+    end
+
+    for i in keys(pymatrix)
+        for j in keys(pymatrix[i])
+            matrix[i+1][j+1] = pymatrix[i+1][j+1]
+            # s += pymatrix[i][j]
+        end
+    end
+
+    clusters = Vector{Vector{Int}}()
+    pyclusters = from.clusters
+    for c in pyclusters
+        push!(clusters, c .+ 1)
+    end
+
+    return AlnGraph(size, matrix, clusters, mat_subposmap,
+        alnlengths, subset_matrix_ind, from.workingDir, from.graphPath, from.clusterPath, from.tracePath)
+end
+
 function AlnGraph(context :: AlnContext)
     wp = joinpath(context.workingdir, "graph")
     gp = joinpath(wp, "graph.txt")
@@ -66,6 +110,7 @@ function AlnGraph(context :: AlnContext)
     end
 
     size = sum(alnlengths)
+    # @show size, alnlengths
     subset_matrix_ind = zeros(Int, length(alnlengths))
     for k in 2:length(alnlengths)
         # some sort of prefix sum that I don't understand
@@ -88,6 +133,7 @@ function AlnGraph(context :: AlnContext)
     for line in eachline(gp)
         a, b, c = [parse(Int, token) for token in split(strip(line))]
         matrix[a+1][b+1] = c
+        # s += c
     end
 
     clusters = Vector{Vector{Int}}()
@@ -97,6 +143,9 @@ function AlnGraph(context :: AlnContext)
             push!(clusters, tokens)
         end
     end
+
+    # @show length(clusters), sum([sum(c) for c in clusters])
+
     return AlnGraph(size, matrix, clusters, mat_subposmap,
         alnlengths, subset_matrix_ind, wp, gp, cp, tp)
 end
@@ -327,7 +376,6 @@ function min_clusters_search(g :: AlnGraph)
                 end
             end
         end
-        # @show length(heap)
     end
 
     queue_idxs = TDict()
@@ -493,13 +541,28 @@ function dump_clusters_to_file(g :: AlnGraph, filename)
     end
 end
 
+function convert_clusters_zerobased(g :: AlnGraph)
+    for cluster in g.clusters
+        cluster .-= 1
+    end
+    return g.clusters
+end
+
+function find_trace(c)
+    g = AlnGraph(AlnContext(c.workingDir, c.subalignmentPaths))
+    purge_duplicate_clusters(g)
+    purge_cluster_violations(g)
+    min_clusters_search(g)
+    return g
+end
+
 precompile(AlnGraph, (AlnContext, ))
 precompile(min_clusters_search, (AlnGraph,))
 precompile(develop_state, 
   (State, AlnGraph, Float64, Int, TDict{Int, Vector{Tuple{Int, Int}}}, TDict{Int, TDict{Int, Int}}))
 
 export min_clusters_search, develop_state, dump_clusters_to_file, AlnContext, AlnGraph
-export purge_duplicate_clusters, purge_cluster_violations
+export purge_duplicate_clusters, purge_cluster_violations, convert_clusters_zerobased, find_trace
 # using Traceur
 
 # workingdir = "allofthem"

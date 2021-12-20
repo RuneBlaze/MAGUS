@@ -31,23 +31,35 @@ def findTrace(graph):
         graph.readClustersFromFile(graph.tracePath)
         
     else:
-        purgeDuplicateClusters(graph)
-        purgeClusterViolations(graph)
-        
-        if Configs.graphTraceMethod == "minclusters":
-            minClustersSearch(graph)       
-        elif Configs.graphTraceMethod == "fm":            
-            fmAlgorithm(graph)        
-        elif Configs.graphTraceMethod == "mwtgreedy":
-            mwtGreedySearch(graph)
-        elif Configs.graphTraceMethod == "mwtsearch":
-            mwtSearch(graph)
-        elif Configs.graphTraceMethod == "rg":
-            rgSearch(graph)
-        elif Configs.graphTraceMethod == "rgfast":
-            rgFastSearch(graph)
-        elif Configs.graphTraceMethod == "naive":
-            naiveClustering(graph)
+        if Configs.useJulia:
+            assert Configs.graphTraceMethod == "minclusters"
+            from julia import Julia
+            jl = Julia()
+            jl.eval('push!(LOAD_PATH, "MagusNight/")')
+            from julia import MagusNight
+            results = MagusNight.find_trace(graph.context)
+            clusters = []
+            for c in results.clusters:
+                clusters.append(list(c - 1))
+            graph.clusters = clusters
+        else:
+            purgeDuplicateClusters(graph)
+            purgeClusterViolations(graph)
+            
+            if Configs.graphTraceMethod == "minclusters":
+                minClustersSearch(graph)       
+            elif Configs.graphTraceMethod == "fm":            
+                fmAlgorithm(graph)        
+            elif Configs.graphTraceMethod == "mwtgreedy":
+                mwtGreedySearch(graph)
+            elif Configs.graphTraceMethod == "mwtsearch":
+                mwtSearch(graph)
+            elif Configs.graphTraceMethod == "rg":
+                rgSearch(graph)
+            elif Configs.graphTraceMethod == "rgfast":
+                rgFastSearch(graph)
+            elif Configs.graphTraceMethod == "naive":
+                naiveClustering(graph)
         
         graph.writeClustersToFile(graph.tracePath)
     

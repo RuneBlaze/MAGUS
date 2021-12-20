@@ -33,6 +33,8 @@ class Configs:
     graphClusterMethod = "mcl" 
     graphTraceMethod = "minclusters"
     graphTraceOptimize = False
+
+    useJulia = False
     
     mafftRuns = 10
     mafftSize = 200
@@ -158,5 +160,7 @@ def buildConfigs(args):
     Configs.logPath = os.path.join(Configs.workingDir, "log.txt")    
     Configs.errorPath = os.path.join(Configs.workingDir, "log_errors.txt")
     Configs.debugPath = os.path.join(Configs.workingDir, "log_debug.txt")
+
+    Configs.useJulia = args.julia
     
     Configs.alignmentSizeLimit = args.alignsizelimit

@@ -9,6 +9,7 @@ from align.merge.graph_cluster.clean_clusters import purgeClusterViolations, pur
 from align.merge.alignment_graph import AlignmentGraph
 from align.alignment_context import AlignmentContext
 from glob import glob
+import julia
 
 Configs.workingDir = "/Users/lbq/Downloads/sandia_data/magus10krun_norecurse"
 
@@ -26,5 +27,31 @@ def critical():
     g.readClustersFromFile(g.clusterPath)
     purgeDuplicateClusters(g)
     purgeClusterViolations(g)
-    minClustersSearch(g)
-print(f"{timeit(lambda: critical(), number = 5) / 5=} seconds")
+    # minClustersSearch(g)
+    g.writeClustersToFile("scratch/clusters.python.txt")
+
+from julia import Julia
+jl = Julia()
+jl.eval('push!(LOAD_PATH, "MagusNight/")')
+
+from julia import MagusNight
+
+def julia_critical():
+    c = AlignmentContext(
+        workingDir=Configs.workingDir,
+        subalignmentPaths=subalnPaths,)
+    g = AlignmentGraph(c)
+    g.initializeMatrix()
+    g.readGraphFromFile(g.graphPath)
+    g.readClustersFromFile(g.clusterPath)
+    results = MagusNight.find_trace(c)
+    clusters = []
+    for c in results.clusters:
+        clusters.append(list(c - 1))
+    g.clusters = clusters
+
+    g.writeClustersToFile("scratch/clusters.night2.txt")
+
+# critical()
+julia_critical()
+# print(f"{timeit(lambda: critical(), number = 5) / 5=} seconds")
