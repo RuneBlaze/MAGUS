@@ -244,9 +244,10 @@ function min_clusters_search(g :: AlnGraph)
     maximal_cut = TDict{Int, Int}()
     state_counter = 0
     aggression = 1.0
-    last_fronter_state = nothing
     greedy = false
     totalpairs = 0
+    last_frontier_state = State(
+        ((0,0,0,0), 0, length(graph.clusters), totalpairs, state_counter, queue_idxs, cluster_breaks, maximal_cut, [], true))
 
     for (a, cluster) = enumerate(graph.clusters)
         for b = cluster
@@ -294,7 +295,7 @@ function min_clusters_search(g :: AlnGraph)
 
             empty!(heap)
             empty!(visited_states)
-            last_frontier_state = develop_state(last_fronter_state, graph, aggression, greedy, 0, subset_clusters, cluster_positions)
+            last_frontier_state = develop_state(last_frontier_state, graph, aggression, greedy, 0, subset_clusters, cluster_positions)
             push!(heap, last_frontier_state)
             heapcleared = true
         end
@@ -324,13 +325,13 @@ function min_clusters_search(g :: AlnGraph)
                 max_frontier = queue_idxs
                 println("Reached new search frontier")
                 println(length(max_frontier))
-                last_fronter_state = state
+                last_frontier_state = state
                 greedy = false
             end
 
             if safefrontier &&! heapcleared
                 println("Safe frontier reached.. Dumping $(length(heap)) from heap and resetting aggression..")
-                last_fronter_state = state
+                last_frontier_state = state
                 empty!(heap)
                 empty!(visited_states)
                 aggression = 1.0
