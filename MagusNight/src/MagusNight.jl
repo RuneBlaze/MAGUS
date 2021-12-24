@@ -98,7 +98,7 @@ function AlnGraph(context :: AlnContext)
     cp = joinpath(wp, "clusters.txt")
     tp = joinpath(wp, "trace.txt")
 
-    for p in [gp, cp, tp]
+    for p in [gp, cp]
         if !isfile(p)
             error("File not found: " * p)
         end
@@ -133,7 +133,6 @@ function AlnGraph(context :: AlnContext)
     for line in eachline(gp)
         a, b, c = [parse(Int, token) for token in split(strip(line))]
         matrix[a+1][b+1] = c
-        # s += c
     end
 
     clusters = Vector{Vector{Int}}()
@@ -476,8 +475,6 @@ function develop_state(
                 end
             end
 
-            # @show diffs
-
             if length(badside) == 0
                 for b = cluster
                     bsub, bpos = graph.mat_subposmap[b]
@@ -564,16 +561,4 @@ precompile(develop_state,
 
 export min_clusters_search, develop_state, dump_clusters_to_file, AlnContext, AlnGraph
 export purge_duplicate_clusters, purge_cluster_violations, convert_clusters_zerobased, find_trace
-# using Traceur
-
-# workingdir = "allofthem"
-# using Glob
-# b = glob(joinpath(workingdir, "subalignments","*"))
-# sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
-# context = AlnContext(workingdir, b)
-# g = AlnGraph(context)
-# purge_duplicate_clusters(g)
-# purge_cluster_violations(g)
-# min_clusters_search(g)
-# dump_clusters_to_file(g, "clusters.scratch.txt")
 end

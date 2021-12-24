@@ -33,9 +33,12 @@ def findTrace(graph):
     else:
         if Configs.useJulia:
             assert Configs.graphTraceMethod == "minclusters"
+            from sys import path
+            from os.path import join
             from julia import Julia
             jl = Julia()
-            jl.eval('push!(LOAD_PATH, "MagusNight/")')
+            p = join(path[0], 'MagusNight')
+            jl.eval(f'push!(LOAD_PATH, "{p}")')
             from julia import MagusNight
             results = MagusNight.find_trace(graph.context)
             clusters = []

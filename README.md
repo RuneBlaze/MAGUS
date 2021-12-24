@@ -6,7 +6,8 @@ with code-name `MagusNight`. There are several goals:
 
  - Parallelize the GCM A* trace-search process
    - An experimental Julia rewrite has been done
-   - Now the plan is to change A* to HDA*
+   - Maybe we should do some sort of any-time A*
+   - Some future plan is to change A* to HDA*
 - Swap out the clustering step of GCM
 
 The original description is below:
