@@ -10,6 +10,11 @@ import time
 from helpers import sequenceutils
 from shutil import which
 
+def relative_to_me(path):
+    r = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
+    assert os.path.isfile(r)
+    return r
+
 class Configs:
     
     workingDir = None
@@ -46,15 +51,15 @@ class Configs:
     recurseGuideTree = "fasttree"
     recurseThreshold = 200
     
-    clustalPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/clustal/clustalo")
-    mafftPath = which("mafft")
-    mclPath = which("mcl")
-    mlrmclPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/mlrmcl/mlrmcl")
-    hmmalignPath = which("hmmalign")
-    hmmbuildPath = which("hmmbuild")
-    hmmsearchPath = which("hmmsearch")
-    fasttreePath = which("FastTree")
-    raxmlPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools/raxmlng/raxml-ng")
+    clustalPath = relative_to_me("tools/clustal/clustalo")
+    mafftPath = which("mafft") or relative_to_me("tools/mafft/mafft")
+    mclPath = which("mcl") or relative_to_me("tools/mcl/bin/mcl")
+    mlrmclPath = relative_to_me("tools/mlrmcl/mlrmcl")
+    hmmalignPath = which("hmmalign") or relative_to_me("tools/hmmer/hmmalign")
+    hmmbuildPath = which("hmmbuild") or relative_to_me("tools/hmmer/hmmbuild")
+    hmmsearchPath = which("hmmsearch") or relative_to_me("tools/hmmer/search")
+    fasttreePath = which("FastTree") or "tools/fasttree/FastTreeMP"
+    raxmlPath = relative_to_me("tools/raxmlng/raxml-ng")
     
     logPath = None
     errorPath = None
