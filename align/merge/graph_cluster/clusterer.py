@@ -26,7 +26,19 @@ def clusterGraph(graph):
         graph.readClustersFromFile(graph.clusterPath)
         
     elif Configs.graphClusterMethod == "mcl":
-        runMclClustering(graph)      
+        runMclClustering(graph)
+
+    elif Configs.graphClusterMethod == "upgma":
+        # FIXME: duplicate code!
+        from sys import path
+        from os.path import join
+        from julia import Julia
+        jl = Julia()
+        p = join(path[0], 'MagusNight')
+        jl.eval(f'push!(LOAD_PATH, "{p}")') 
+        from julia import MagusNight
+        graph.clusters = MagusNight.find_clusters(graph.context)
+        graph.writeClustersToFile(graph.clusterPath)
         
     elif Configs.graphClusterMethod == "mlrmcl":
         runMlrMclClustering(graph)

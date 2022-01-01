@@ -4,6 +4,7 @@ using SparseArrays
 using Base.Filesystem
 using DataStructures
 using Debugger
+include("Clusterings.jl")
 # using Parsers
 
 const TDict = OrderedDict
@@ -558,7 +559,11 @@ precompile(AlnGraph, (AlnContext, ))
 precompile(min_clusters_search, (AlnGraph,))
 precompile(develop_state, 
   (State, AlnGraph, Float64, Int, TDict{Int, Vector{Tuple{Int, Int}}}, TDict{Int, TDict{Int, Int}}))
+precompile(upgma_naive_clustering, (Vector{Int}, Dict{Int, Dict{Int, Float64}}, Int))
+# precompile(x/s)
 
 export min_clusters_search, develop_state, dump_clusters_to_file, AlnContext, AlnGraph
 export purge_duplicate_clusters, purge_cluster_violations, convert_clusters_zerobased, find_trace
+
+export find_clusters, upgma_naive_clustering
 end

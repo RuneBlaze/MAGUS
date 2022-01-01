@@ -58,7 +58,7 @@ class Configs:
     hmmalignPath = which("hmmalign") or relative_to_me("tools/hmmer/hmmalign")
     hmmbuildPath = which("hmmbuild") or relative_to_me("tools/hmmer/hmmbuild")
     hmmsearchPath = which("hmmsearch") or relative_to_me("tools/hmmer/hmmsearch")
-    fasttreePath = which("FastTree") or "tools/fasttree/FastTreeMP"
+    fasttreePath = which("FastTreeMP") or which("FastTree") or relative_to_me("tools/fasttree/FastTreeMP")
     raxmlPath = relative_to_me("tools/raxmlng/raxml-ng")
     
     logPath = None
