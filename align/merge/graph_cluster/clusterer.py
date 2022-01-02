@@ -37,7 +37,8 @@ def clusterGraph(graph):
         p = join(path[0], 'MagusNight')
         jl.eval(f'push!(LOAD_PATH, "{p}")') 
         from julia import MagusNight
-        graph.clusters = MagusNight.find_clusters(graph.context).tolist()
+        r = MagusNight.find_clusters(graph.context)
+        graph.clusters = [list(e) for e in r]
         graph.writeClustersToFile(graph.clusterPath)
         
     elif Configs.graphClusterMethod == "mlrmcl":
