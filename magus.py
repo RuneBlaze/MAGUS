@@ -24,7 +24,7 @@ def main():
     buildConfigs(args)    
     Configs.log("MAGUS was run with: {}".format(" ".join(sys.argv)))
     from julia import Base
-    Configs.log(f"Julia interface configured: {Base.sind(90)=}")
+    Configs.log(f"Julia interface configured: Base.sind= {Base.sind(90)}")
     try:
         manager.startTaskManager()
         mainAlignmentTask()
