@@ -3,7 +3,7 @@ module MagusNight
 using SparseArrays
 using Base.Filesystem
 using DataStructures
-using Debugger
+# using Debugger
 include("Clusterings.jl")
 # using Parsers
 
