@@ -81,15 +81,17 @@ function get_graph_path(context :: AlnContext)
     return gp
 end
 
-function AlnGraph(context :: AlnContext)
+function AlnGraph(context :: AlnContext; ghostrun = false)
     wp = joinpath(context.workingdir, "graph")
     gp = joinpath(wp, "graph.txt")
     cp = joinpath(wp, "clusters.txt")
     tp = joinpath(wp, "trace.txt")
 
-    for p in [gp, cp]
-        if !isfile(p)
-            error("File not found: " * p)
+    if !ghostrun
+        for p in [gp, cp]
+            if !isfile(p)
+                error("File not found: " * p)
+            end
         end
     end
 
@@ -114,21 +116,25 @@ function AlnGraph(context :: AlnContext)
             i += 1
         end
     end
+
     matrix = Vector{TDict{Int, Int}}(undef, size)
-    for i = 1:size
-        matrix[i] = TDict{Int, Int}()
-    end
-
-    for line in eachline(gp)
-        a, b, c = [parse(Int, token) for token in split(strip(line))]
-        matrix[a+1][b+1] = c
-    end
-
     clusters = Vector{Vector{Int}}()
-    for line in eachline(cp)
-        tokens = [parse(Int, token) + 1 for token in split(strip(line))]
-        if length(tokens) > 1
-            push!(clusters, tokens)
+    if !ghostrun
+        
+        for i = 1:size
+            matrix[i] = TDict{Int, Int}()
+        end
+    
+        for line in eachline(gp)
+            a, b, c = [parse(Int, token) for token in split(strip(line))]
+            matrix[a+1][b+1] = c
+        end
+
+        for line in eachline(cp)
+            tokens = [parse(Int, token) + 1 for token in split(strip(line))]
+            if length(tokens) > 1
+                push!(clusters, tokens)
+            end
         end
     end
 

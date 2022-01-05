@@ -463,7 +463,7 @@ end
 
 function find_clusters(c; config = ClusteringConfig())
     # c, alignment context
-    g = AlnGraph(AlnContext(c.workingDir, c.subalignmentPaths))
+    g = AlnGraph(AlnContext(c.workingDir, c.subalignmentPaths); ghostrun = true)
     labels, adj = read_graph(c.graph.graphPath)
     upgma_naive_clustering(labels, adj, g; config = config)
 end

@@ -30,14 +30,14 @@ function find_clusterings()
     context = AlnContext(workingdir, b)
     labels, adj = read_graph(get_graph_path(context))
     g = AlnGraph(context)
-    outfile = "scratch/clustering_results.noorder.txt"
+    outfile = "scratch/clustering_results.test.txt"
     if isfile(outfile)
         results = open(outfile, "r") do f
             read(f, String)
         end
         results = eval(Meta.parse(results))
     else
-        results = upgma_naive_clustering(labels, adj, g; config = ClusteringConfig(true, false))
+        results = upgma_naive_clustering(labels, adj, g; config = ClusteringConfig(true, true))
         open(outfile, "w+") do f
             println(f, results)
         end
