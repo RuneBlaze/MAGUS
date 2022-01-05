@@ -44,6 +44,8 @@ class Configs:
     mafftRuns = 10
     mafftSize = 200
     mclInflationFactor = 4
+
+    upgmaKeepOrder = True
     
     constrain = True
     onlyGuideTree = False
@@ -167,5 +169,6 @@ def buildConfigs(args):
     Configs.debugPath = os.path.join(Configs.workingDir, "log_debug.txt")
 
     Configs.useJulia = args.julia
+    Configs.upgmaKeepOrder = args.keepOrder
     
     Configs.alignmentSizeLimit = args.alignsizelimit

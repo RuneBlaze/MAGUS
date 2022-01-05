@@ -52,6 +52,24 @@ def julia_critical():
 
     g.writeClustersToFile("scratch/clusters.night2.txt")
 
+def julia_clustering():
+    c = AlignmentContext(
+        workingDir=Configs.workingDir,
+        subalignmentPaths=subalnPaths,)
+    g = AlignmentGraph(c)
+    c.graph = g
+    g.initializeMatrix()
+    g.readGraphFromFile(g.graphPath)
+    g.readClustersFromFile(g.clusterPath)
+    results = MagusNight.find_clusters(c, config = MagusNight.ClusteringConfig(True, True))
+    g.clusters = [list(e) for e in results]
+    purgeDuplicateClusters(g)
+    purgeClusterViolations(g)
+    minClustersSearch(g)
+    g.writeClustersToFile("scratch/ordered_clusters.txt")
+    # print(results)
+
 # critical()
-julia_critical()
+# julia_critical()
+julia_clustering()
 # print(f"{timeit(lambda: critical(), number = 5) / 5=} seconds")

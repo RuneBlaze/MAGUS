@@ -30,6 +30,76 @@ mutable struct Node
     inedges :: IdSet{Node}
 end
 
+struct FlatCluster
+    nodes :: Vector{Int}
+    rows :: BitSet
+    positions :: Vector{Tuple{Int, Int}}
+end
+
+struct ClusteringConfig
+    prevent_vertical_violations :: Bool
+    ensure_order :: Bool
+end
+
+ClusteringConfig() = ClusteringConfig(true, true)
+
+function convert_to_flatclusters(clusters, alngraph :: AlnGraph)
+    res = FlatCluster[]
+    for cluster = clusters
+        rows = BitSet()
+        for c = cluster
+            r = get_node_row(c, alngraph)
+            @assert r ∉ rows
+            push!(rows, r)
+        end
+
+        positions = Tuple{Int, Int}[]
+        for c = cluster
+            push!(positions, get_node_pos(c, alngraph))
+        end
+        push!(res, FlatCluster(cluster, rows, positions))
+    end
+    res
+end
+
+function partial_lessthan(lhs :: FlatCluster, rhs :: FlatCluster)
+    for i = lhs.rows ∩ rhs.rows
+        lhs_columns = [b for (a, b) = lhs.positions if a == i]
+        rhs_columns = [b for (a, b) = rhs.positions if a == i]
+        if maximum(lhs_columns) >= minimum(rhs_columns)
+            return false
+        end
+    end
+    return true
+end
+
+function partial_wellordered(lhs :: FlatCluster, rhs :: FlatCluster)
+    if !isempty(lhs.rows ∩ rhs.rows)
+        if partial_lessthan(lhs, rhs)
+            return -1
+        elseif partial_lessthan(rhs, lhs)
+            return 1
+        else
+            error("Clusters are not well-ordered")
+        end
+    else
+        return 0
+    end
+end
+
+function check_flatclusters_validity(flatclusters :: Vector{FlatCluster})
+    d = Dict(-1 => 0, 0 => 0, 1 => 0)
+    n = length(flatclusters)
+    for i = 1:n
+        for j = i+1:n
+            lhs = flatclusters[i]
+            rhs = flatclusters[j]
+            d[partial_wellordered(lhs, rhs)] += 1
+        end
+    end
+    return d
+end
+
 function naive_newick(n :: Node)
     if !isnothing(n.label)
         return "$(n.label)"
@@ -231,21 +301,21 @@ function join_nodes!(lhs :: Node, rhs :: Node)
     mid
 end
 
-function is_valid_join(u :: Node, v :: Node)
+function is_valid_join(u :: Node, v :: Node; config :: ClusteringConfig)
+    # @show config
+    # error("showed config")
     root = u.parent
-    if !isempty(u.rows ∩ v.rows)
+    if config.prevent_vertical_violations && !isempty(u.rows ∩ v.rows)
         return false
     end
-    if !exists_partial_order(root, u, v)
+    if config.ensure_order && !exists_partial_order(root, u, v)
         return false
     end
-    # @show "valid!"
     return true
 end
 
 function star_tree(labels :: Vector{Int}, graph :: AlnGraph)
     leaves = [Node(n, graph) for n in labels]
-    # @show sort(collect(Set([first(n.rows) for n in leaves])))
     sort!(leaves; by = x -> x.label)
     bound = 0
 
@@ -297,7 +367,8 @@ function flat_labels(node :: Node)
     return res
 end
 
-function upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; order = Base.Order.Reverse)
+function upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; 
+    order = Base.Order.Reverse, config :: ClusteringConfig = ClusteringConfig())
     tree = star_tree(labels, graph)
     pq = PriorityQueue{Tuple{Node, Node}, Float64}(order)
     for i=tree.children
@@ -307,7 +378,7 @@ function upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64
             end
         end
     end
-    return upgma_step2(tree, pq)
+    return upgma_step2(tree, pq; config = config)
 end
 
 function read_graph(io)
@@ -328,7 +399,7 @@ function read_graph(io)
     return collect(labels), graph
 end
 
-function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float64})
+function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float64}; config :: ClusteringConfig)
     @inline mkpair(a, b) = a < b ? (a, b) : (b, a)
 
     while numchildren(tree) > 2 &&! isempty(pq)
@@ -337,10 +408,10 @@ function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float6
             continue
         end
 
-        if !(is_valid_join(l, r))
+        if !(is_valid_join(l, r; config))
             continue
         end
-        # @show length(pq)
+
         mid = join_nodes!(l, r)
 
         for c = tree.children
@@ -362,7 +433,6 @@ function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float6
             end
             
             enqueue!(pq, mkpair(mid, c), ud)
-            # end
         end
     end
     return tree
@@ -385,17 +455,17 @@ function breakup_clusters(root :: Node, max_size :: Int)
     return res
 end
 
-function upgma_naive_clustering(labels :: Vector{Int}, graph :: Dict{Int, Dict{Int, Float64}}, alngraph :: AlnGraph)
-    tree = upgma(labels, graph, alngraph)
+function upgma_naive_clustering(labels :: Vector{Int}, graph :: Dict{Int, Dict{Int, Float64}}, alngraph :: AlnGraph;
+    config :: ClusteringConfig = ClusteringConfig())
+    tree = upgma(labels, graph, alngraph; config = config)
     [flat_labels(c) for c = tree.children]
 end
 
-function find_clusters(c)
+function find_clusters(c; config = ClusteringConfig())
     # c, alignment context
     g = AlnGraph(AlnContext(c.workingDir, c.subalignmentPaths))
-    # K = length(c.subalignmentPaths) # number of constraint alignments, upper bound of sizes
     labels, adj = read_graph(c.graph.graphPath)
-    upgma_naive_clustering(labels, adj, g)
+    upgma_naive_clustering(labels, adj, g; config = config)
 end
 
 # labels, G = read_graph("/home/lbq/research/datasets/UnalignFragTree/high_frag/1000M1/R0/unaligned_all.magus_take2_false/graph/graph.txt")
