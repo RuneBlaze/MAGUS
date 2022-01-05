@@ -38,7 +38,7 @@ def clusterGraph(graph):
         jl.eval(f'push!(LOAD_PATH, "{p}")') 
         from julia import MagusNight
         Configs.log(f"Running UPGMA clustering: avoid vertical violations: {True}, avoid order violations: {Configs.upgmaKeepOrder}")
-        r = MagusNight.find_clusters(graph.context, MagusNight.ClusteringConfig(True, Configs.upgmaKeepOrder))
+        r = MagusNight.find_clusters(graph.context, config = MagusNight.ClusteringConfig(True, Configs.upgmaKeepOrder))
         graph.clusters = [list(e) for e in r]
         graph.writeClustersToFile(graph.clusterPath)
         
