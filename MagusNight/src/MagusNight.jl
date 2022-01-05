@@ -7,21 +7,7 @@ using DataStructures
 include("Clusterings.jl")
 # using Parsers
 
-const TDict = OrderedDict
 
-mutable struct AlnGraph # analog to AlignmentGraph, in Julia
-    size :: Int
-    matrix :: Vector{TDict{Int, Int}}
-    clusters :: Vector{Vector{Int}}
-    mat_subposmap :: Vector{Tuple{Int, Int}}
-    subaln_lengths :: Vector{Int}
-    subset_matrix_ind :: Vector{Int}
-
-    workingdir :: String
-    graphpath :: String
-    clusterpath :: String
-    tracepath :: String
-end
 
 mutable struct AlnContext
     workingdir :: String
@@ -91,6 +77,12 @@ function from_python_alngraph(pgraph)
 
     return AlnGraph(size, matrix, clusters, mat_subposmap,
         alnlengths, subset_matrix_ind, from.workingDir, from.graphPath, from.clusterPath, from.tracePath)
+end
+
+function get_graph_path(context :: AlnContext)
+    wp = joinpath(context.workingdir, "graph")
+    gp = joinpath(wp, "graph.txt")
+    return gp
 end
 
 function AlnGraph(context :: AlnContext)
@@ -559,11 +551,12 @@ precompile(AlnGraph, (AlnContext, ))
 precompile(min_clusters_search, (AlnGraph,))
 precompile(develop_state, 
   (State, AlnGraph, Float64, Int, TDict{Int, Vector{Tuple{Int, Int}}}, TDict{Int, TDict{Int, Int}}))
-precompile(upgma_naive_clustering, (Vector{Int}, Dict{Int, Dict{Int, Float64}}, Int))
+# precompile(upgma_naive_clustering, (Vector{Int}, Dict{Int, Dict{Int, Float64}}, Int))
 # precompile(x/s)
 
 export min_clusters_search, develop_state, dump_clusters_to_file, AlnContext, AlnGraph
 export purge_duplicate_clusters, purge_cluster_violations, convert_clusters_zerobased, find_trace
+export get_graph_path, read_graph
 
 export find_clusters, upgma_naive_clustering
 end

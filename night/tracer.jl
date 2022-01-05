@@ -23,6 +23,19 @@ function run_benchmark()
     println(s)
 end
 
+function find_clusterings()
+    workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
+    b = glob(joinpath(workingdir, "subalignments","*"))
+    sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
+    context = AlnContext(workingdir, b)
+    labels, adj = read_graph(get_graph_path(context))
+    g = AlnGraph(context)
+    results = upgma_naive_clustering(labels, adj, g)
+    open("scratch/clustering_results", "w+") do f
+        println(f, results)
+    end
+end
+
 function main_task()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
     b = glob(joinpath(workingdir, "subalignments","*"))
@@ -35,7 +48,7 @@ function main_task()
     dump_clusters_to_file(g, "scratch/clusters.julia.txt")
 end
 
-main_task()
+find_clusterings()
 
 # run_benchmark()
 # Profile.print()
