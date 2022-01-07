@@ -61,7 +61,6 @@ function from_python_alngraph(pgraph)
     for i in keys(pymatrix)
         for j in keys(pymatrix[i])
             matrix[i+1][j+1] = pymatrix[i+1][j+1]
-            # s += pymatrix[i][j]
         end
     end
 
@@ -137,8 +136,6 @@ function AlnGraph(context :: AlnContext; ghostrun = false)
             end
         end
     end
-
-    # @show length(clusters), sum([sum(c) for c in clusters])
 
     return AlnGraph(size, matrix, clusters, mat_subposmap,
         alnlengths, subset_matrix_ind, wp, gp, cp, tp)

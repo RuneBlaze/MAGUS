@@ -39,9 +39,11 @@ end
 struct ClusteringConfig
     prevent_vertical_violations :: Bool
     ensure_order :: Bool
+    zero_weight :: Bool
 end
 
-ClusteringConfig() = ClusteringConfig(true, true)
+# ClusteringConfig() = ClusteringConfig(true, true, true)
+ClusteringConfig(a = true, b = true, c = true) = ClusteringConfig(a, b, c)
 
 function convert_to_flatclusters(clusters, alngraph :: AlnGraph)
     res = FlatCluster[]
@@ -402,6 +404,8 @@ end
 function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float64}; config :: ClusteringConfig)
     @inline mkpair(a, b) = a < b ? (a, b) : (b, a)
 
+    zero_weight_mode = config.zero_weight
+
     while numchildren(tree) > 2 &&! isempty(pq)
         l, r = dequeue!(pq)
         if !(l.alive && r.alive)
@@ -418,16 +422,22 @@ function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float6
             if c == mid || l == c || r == c
                 continue
             end
-            # this should be UPGMA*
-            # if is_valid_join(mid, c)
             p1 = mkpair(l, c)
             p2 = mkpair(r, c)
             if haskey(pq, p1) && haskey(pq, p2)
                 ud = (pq[p1] * l.num_elements + pq[p2] * r.num_elements)/(l.num_elements + r.num_elements)
             elseif haskey(pq, p1)
-                ud = pq[p1]
+                if !zero_weight_mode
+                    ud = pq[p1]
+                else
+                    ud = (pq[p1] * l.num_elements)/(l.num_elements + r.num_elements)
+                end
             elseif haskey(pq, p2)
-                ud = pq[p2]
+                if !zero_weight_mode
+                    ud = pq[p2]
+                else
+                    ud = (pq[p2] * r.num_elements)/(l.num_elements + r.num_elements)
+                end
             else
                 continue
             end

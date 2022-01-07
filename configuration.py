@@ -170,5 +170,6 @@ def buildConfigs(args):
 
     Configs.useJulia = args.julia
     Configs.upgmaKeepOrder = args.keepOrder
+    Configs.upgmaZeroWeight = args.zeroWeight
     
     Configs.alignmentSizeLimit = args.alignsizelimit
