@@ -40,10 +40,12 @@ struct ClusteringConfig
     prevent_vertical_violations :: Bool
     ensure_order :: Bool
     zero_weight :: Bool
+
+    ClusteringConfig(a = true, b = true, c = false) = new(a, b, c)
 end
 
 # ClusteringConfig() = ClusteringConfig(true, true, true)
-ClusteringConfig(a = true, b = true, c = true) = ClusteringConfig(a, b, c)
+# ClusteringConfig(a = true, b = true, c = true) = ClusteringConfig(a, b, c)
 
 function convert_to_flatclusters(clusters, alngraph :: AlnGraph)
     res = FlatCluster[]
@@ -337,13 +339,8 @@ function is_valid_join(u :: Node, v :: Node; config :: ClusteringConfig)
     if config.prevent_vertical_violations && !isempty(u.rows ∩ v.rows)
         return false
     end
-    if config.ensure_order
-        # old = exists_partial_order(root, u, v)
-        new = dfs_exists_partial_order(root, u, v)
-        # @assert old == new
-        if !new
-            return false
-        end
+    if config.ensure_order && !dfs_exists_partial_order(root, u, v)
+        return false
     end
     return true
 end
