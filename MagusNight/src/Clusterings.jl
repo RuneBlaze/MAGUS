@@ -89,7 +89,7 @@ function partial_wellordered(lhs :: FlatCluster, rhs :: FlatCluster)
     end
 end
 
-function check_flatclusters_validity(flatclusters :: Vector{FlatCluster})
+function check_flatclusters_validity(flatclusters)
     d = Dict(-1 => 0, 0 => 0, 1 => 0)
     n = length(flatclusters)
     for i = 1:n
@@ -196,6 +196,33 @@ function expand!(u :: Node, v :: Node, mid :: Node) # inverse of contract!
     for e = v.inedges
         push!(e.outedges, v)
     end
+end
+
+function dfs_exists_partial_order(root :: Node, u :: Node, v :: Node)
+    if exists_selfloop(u, v)
+        return false
+    end
+
+    function reachable_from(s, t :: Node)
+        stack = collect(s)
+        visited = Set{Node}()
+        while !isempty(stack)
+            n = pop!(stack)
+            for e = n.outedges
+                if e ∉ visited
+                    if e == t
+                        return true
+                    end
+                    push!(visited, e)
+                    push!(stack, e)
+                end
+            end
+        end
+        return false
+    end
+
+    loop_exists = reachable_from(u.outedges, v) || reachable_from(v.outedges, u)
+    return !loop_exists
 end
 
 function exists_partial_order(root :: Node, u :: Node, v :: Node)
@@ -310,8 +337,13 @@ function is_valid_join(u :: Node, v :: Node; config :: ClusteringConfig)
     if config.prevent_vertical_violations && !isempty(u.rows ∩ v.rows)
         return false
     end
-    if config.ensure_order && !exists_partial_order(root, u, v)
-        return false
+    if config.ensure_order
+        # old = exists_partial_order(root, u, v)
+        new = dfs_exists_partial_order(root, u, v)
+        # @assert old == new
+        if !new
+            return false
+        end
     end
     return true
 end

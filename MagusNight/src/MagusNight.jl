@@ -546,6 +546,8 @@ function find_trace(c)
     return g
 end
 
+AlnGraph(c) = AlnGraph(AlnContext(c.workingDir, c.subalignmentPaths))
+
 precompile(AlnGraph, (AlnContext, ))
 precompile(min_clusters_search, (AlnGraph,))
 precompile(develop_state, 
@@ -556,7 +558,7 @@ precompile(upgma_naive_clustering, (Vector{Int}, Dict{Int, Dict{Int, Float64}}, 
 export min_clusters_search, develop_state, dump_clusters_to_file, AlnContext, AlnGraph
 export purge_duplicate_clusters, purge_cluster_violations, convert_clusters_zerobased, find_trace
 export get_graph_path, read_graph, check_flatclusters_validity, convert_to_flatclusters
-export ClusteringConfig
+export ClusteringConfig, AlnGraph
 
 export find_clusters, upgma_naive_clustering
 end
