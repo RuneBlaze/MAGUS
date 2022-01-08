@@ -5,12 +5,6 @@ using Base.Filesystem
 using DataStructures
 include("Clusterings.jl")
 
-# this file is intended to contain a rewrite of the minclusters algorithm
-# but with parallelism, but I never got to do the paralleism part
-
-# On some inputs, this version can be twice as fast as the Python version.
-# Therefore this must have some use... Hopefully.
-
 mutable struct AlnContext
     workingdir :: String
     subalnpaths :: Vector{String}

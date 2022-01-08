@@ -168,7 +168,7 @@ def buildConfigs(args):
     Configs.errorPath = os.path.join(Configs.workingDir, "log_errors.txt")
     Configs.debugPath = os.path.join(Configs.workingDir, "log_debug.txt")
 
-    Configs.useJulia = args.julian
+    Configs.useJulia = args.julia
     Configs.upgmaKeepOrder = args.keepOrder
     Configs.upgmaZeroWeight = args.zeroWeight
     

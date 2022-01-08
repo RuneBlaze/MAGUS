@@ -5,8 +5,6 @@ sys.path.append(dirname(dirname(realpath(__file__))))
 
 from configuration import Configs
 from align.merge.graph_trace.min_clusters import minClustersSearch
-from align.merge.graph_cluster.rg import rgClustering
-from align.merge.graph_cluster.mcl import runMclClustering
 from align.merge.graph_cluster.clean_clusters import purgeClusterViolations, purgeDuplicateClusters
 from align.merge.alignment_graph import AlignmentGraph
 from align.alignment_context import AlignmentContext
@@ -57,11 +55,9 @@ def julia_critical():
 def julia_clustering():
     c = AlignmentContext(
         workingDir=Configs.workingDir,
-        subalignmentPaths=subalnPaths,
-        subalignments = subalnPaths)
+        subalignmentPaths=subalnPaths,)
     g = AlignmentGraph(c)
     c.graph = g
-    g.context.subalignments = subalnPaths
     g.initializeMatrix()
     g.readGraphFromFile(g.graphPath)
     g.readClustersFromFile(g.clusterPath)
@@ -73,26 +69,7 @@ def julia_clustering():
     g.writeClustersToFile("scratch/ordered_clusters.txt")
     # print(results)
 
-def python_rg_clustering():
-    c = AlignmentContext(
-        workingDir=Configs.workingDir,
-        subalignmentPaths=subalnPaths,)
-    g = AlignmentGraph(c)
-    c.graph = g
-    
-    g.initializeMatrix()
-    g.readGraphFromFile(g.graphPath)
-
-    # g.readClustersFromFile(g.clusterPath)
-    rgClustering(g, False)
-    # runMclClustering(g)
-    print(f"{g.clusters=}")
-    tt = sum(len(c) for c in g.clusters)
-    print(f"{tt=}")
-    print(MagusNight.check_flatclusters_validity(MagusNight.convert_to_flatclusters(g.clusters, MagusNight.AlnGraph(c))))
-
 # critical()
 # julia_critical()
-# julia_clustering()
-python_rg_clustering()
+julia_clustering()
 # print(f"{timeit(lambda: critical(), number = 5) / 5=} seconds")

@@ -1,20 +1,14 @@
 # MAGUS
 Multiple Sequence Alignment using Graph Clustering
 
-This is a personal research fork of the original version,
-with code-name `MagusNight`. There are several goals, some risky, some less so:
+This is a personal fork of the original version,
+with code-name `MagusNight`. There are several goals:
 
  - Parallelize the GCM A* trace-search process
-   - An experimental Julia rewrite has been done, which has better parallelization primitives. This unparallelized Julia version might come useful when the Python `minclusters` is slow due to Python overhead
-      - To really make the comparison fair, this Julia
-      version should probably be compared against pypy
-   - Maybe we can do some sort of any-time A*
-   - Some future/very far future plan is to change A* to HDA*
+   - An experimental Julia rewrite has been done
+   - Maybe we should do some sort of any-time A*
+   - Some future plan is to change A* to HDA*
 - Swap out the clustering step of GCM
-  - I focus on trace-by-construction clustering algorithm (like a version of `rg` in the MWT-AM paper), because these seem easier to parallelize than some clustering method + tracing method.
-  - This is delicate. Somehow right now a UPGMA based algorithm is having decent accuracy on a limited set of data. More experiments are following.
-
-This fork relies on `PyJulia` for allowing Julia code to interpolate with Python. See https://github.com/JuliaPy/pyjulia for instructions on how to install PyJulia (assuming an existing Julia installation).
 
 The original description is below:
 
