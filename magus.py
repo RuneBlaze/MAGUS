@@ -134,7 +134,7 @@ def parseArgs():
     parser.add_argument("--alignsizelimit", type=float,
                         help="Size threshold for alignment compression (in GB)", required=False, default=100)
     
-    parser.add_argument("-j", "--julia", action="store_true", help="use Julia to speed-up the trace-finding process")
+    parser.add_argument("-j", "--julian", action="store_true", help="use Julia to speed-up the trace-finding process (experimental)")
     parser.add_argument("--keepOrder", action="store_false", help="during the UPGMA clustering, ensure that clusters have valid order")
     parser.add_argument("--zeroWeight", action="store_true", help="use zero-averaged weight in the UPGMA clustering step")
     return parser.parse_args()

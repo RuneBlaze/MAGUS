@@ -19,6 +19,9 @@ mutable struct AlnGraph # analog to AlignmentGraph, in Julia
     tracepath :: String
 end
 
+
+# We really should not be using this struct, but we should keep things in lists/dicts
+# I really think that using IdSet hurts performance here
 mutable struct Node
     children :: IdSet{Node}
     parent :: Union{Nothing, Node}
@@ -40,10 +43,11 @@ struct ClusteringConfig
     prevent_vertical_violations :: Bool
     ensure_order :: Bool
     zero_weight :: Bool
+    ClusteringConfig(pvv = true, eo = true, zw = false) = new(pvv, eo, zw)
 end
 
 # ClusteringConfig() = ClusteringConfig(true, true, true)
-ClusteringConfig(a = true, b = true, c = true) = ClusteringConfig(a, b, c)
+# ClusteringConfig(a = true, b = true, c = true) = ClusteringConfig(a, b, c)
 
 function convert_to_flatclusters(clusters, alngraph :: AlnGraph)
     res = FlatCluster[]
@@ -404,15 +408,96 @@ end
 function upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; 
     order = Base.Order.Reverse, config :: ClusteringConfig = ClusteringConfig())
     tree = star_tree(labels, graph)
-    pq = PriorityQueue{Tuple{Node, Node}, Float64}(order)
+    # pq = PriorityQueue{Tuple{Node, Node}, Float64}(order)
+    pqs = Dict{Node, PriorityQueue{Node, Float64}}()
     for i=tree.children
         for j=tree.children
             if i < j && haskey(similarity_, i.label) && haskey(similarity_[i.label], j.label)
-                enqueue!(pq, (i, j), similarity_[i.label][j.label])
+                # enqueue!(pq, (i, j), similarity_[i.label][j.label])
+                
+                enqueue!(get!(pqs, i, PriorityQueue(order)), j => similarity_[i.label][j.label])
             end
         end
     end
-    return upgma_step2(tree, pq; config = config)
+    return upgma_step2(tree, pqs; config = config)
+end
+
+function upgma_step2(tree :: Node, pqs :: Dict{Node, PriorityQueue{Node, Float64}}; config :: ClusteringConfig)
+    @inline mkpair(a, b) = a < b ? (a, b) : (b, a)
+
+    zero_weight_mode = config.zero_weight
+
+    N = Threads.nthreads()
+
+    while numchildren(tree) > 2
+        thread_results = [Tuple{Float64, Node, Node}[] for _ = 1:N]
+        dead_ls = [Node[] for _ = 1:N]
+        Threads.@threads for (l, pq) = pqs
+            tid = Threads.thread_id()
+            if !l.alive
+                push!(dead_ls[tid], l)
+                continue
+            end
+            while !isempty(pq)
+                r = peek(pq)
+                v = pq[r]
+                
+                if !r.alive || !(is_valid_join(l, r; config))
+                    dequeue!(pq)
+                    continue
+                end
+
+                push!(thread_results[tid], (v, l, r))
+                break
+            end
+        end
+
+        if all(isempty, thread_results)
+            break
+        end
+
+        (_, l, r) = maximum((v, l, r) for e = thread_results for (v, l, r) = e)
+        dequeue!(pqs[l])
+        dead_keys = [l for e = dead_ls for l = e]
+        for e = dead_keys
+            delete!(pqs, e)
+        end
+
+        mid = join_nodes!(l, r)
+
+        for c = tree.children
+            if c == mid || l == c || r == c
+                continue
+            end
+            p1 = mkpair(l, c)
+            p2 = mkpair(r, c)
+            @inline in_pq(pos) = haskey(pqs, pos[1]) && haskey(pqs[pos[1]], pos[2])
+            @inline get_pq(pos) = pqs[pos[1]][pos[2]]
+            if in_pq(p1) && in_pq(p2)
+                ud = (get_pq(p1) * l.num_elements + get_pq(p2) * r.num_elements)/(l.num_elements + r.num_elements)
+            elseif in_pq(p1)
+                if !zero_weight_mode
+                    ud = get_pq(p1)
+                else
+                    ud = (get_pq(p1) * l.num_elements)/(l.num_elements + r.num_elements)
+                end
+            elseif in_pq(p2)
+                if !zero_weight_mode
+                    ud = get_pq(p2)
+                else
+                    ud = (get_pq(p2) * r.num_elements)/(l.num_elements + r.num_elements)
+                end
+            else
+                continue
+            end
+
+            lhs, rhs = mkpair(mid, c)
+            enqueue!(get!(pqs, lhs, PriorityQueue(Base.Order.Reverse)), rhs => ud)
+            
+            # enqueue!(pq, mkpair(mid, c), ud)
+        end
+    end
+    return tree
 end
 
 function read_graph(io)
@@ -431,53 +516,6 @@ function read_graph(io)
         graph[a][b] = w
     end
     return collect(labels), graph
-end
-
-function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float64}; config :: ClusteringConfig)
-    @inline mkpair(a, b) = a < b ? (a, b) : (b, a)
-
-    zero_weight_mode = config.zero_weight
-
-    while numchildren(tree) > 2 &&! isempty(pq)
-        l, r = dequeue!(pq)
-        if !(l.alive && r.alive)
-            continue
-        end
-
-        if !(is_valid_join(l, r; config))
-            continue
-        end
-
-        mid = join_nodes!(l, r)
-
-        for c = tree.children
-            if c == mid || l == c || r == c
-                continue
-            end
-            p1 = mkpair(l, c)
-            p2 = mkpair(r, c)
-            if haskey(pq, p1) && haskey(pq, p2)
-                ud = (pq[p1] * l.num_elements + pq[p2] * r.num_elements)/(l.num_elements + r.num_elements)
-            elseif haskey(pq, p1)
-                if !zero_weight_mode
-                    ud = pq[p1]
-                else
-                    ud = (pq[p1] * l.num_elements)/(l.num_elements + r.num_elements)
-                end
-            elseif haskey(pq, p2)
-                if !zero_weight_mode
-                    ud = pq[p2]
-                else
-                    ud = (pq[p2] * r.num_elements)/(l.num_elements + r.num_elements)
-                end
-            else
-                continue
-            end
-            
-            enqueue!(pq, mkpair(mid, c), ud)
-        end
-    end
-    return tree
 end
 
 function breakup_clusters(root :: Node, max_size :: Int)

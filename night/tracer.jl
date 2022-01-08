@@ -31,7 +31,8 @@ function find_clusterings()
     labels, adj = read_graph(get_graph_path(context))
     g = AlnGraph(context)
     outfile = "scratch/clustering_results.test.txt"
-    if isfile(outfile)
+    always_rewrite = true
+    if isfile(outfile) &&! always_rewrite
         results = open(outfile, "r") do f
             read(f, String)
         end
