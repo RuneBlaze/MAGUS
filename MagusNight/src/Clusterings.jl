@@ -2,6 +2,7 @@ using DataStructures
 using SparseArrays
 import Base.IdSet
 using Base.Iterators
+# using ThreadsX
 
 const TDict = OrderedDict
 
@@ -200,29 +201,28 @@ function expand!(u :: Node, v :: Node, mid :: Node) # inverse of contract!
     end
 end
 
+function reachable_from(s, t :: Node)
+    stack = collect(s)
+    visited = Set{Node}()
+    while !isempty(stack)
+        n = pop!(stack)
+        for e = n.outedges
+            if e ∉ visited
+                if e == t
+                    return true
+                end
+                push!(visited, e)
+                push!(stack, e)
+            end
+        end
+    end
+    return false
+end
+
 function dfs_exists_partial_order(root :: Node, u :: Node, v :: Node)
     if exists_selfloop(u, v)
         return false
     end
-
-    function reachable_from(s, t :: Node)
-        stack = collect(s)
-        visited = Set{Node}()
-        while !isempty(stack)
-            n = pop!(stack)
-            for e = n.outedges
-                if e ∉ visited
-                    if e == t
-                        return true
-                    end
-                    push!(visited, e)
-                    push!(stack, e)
-                end
-            end
-        end
-        return false
-    end
-
     loop_exists = reachable_from(u.outedges, v) || reachable_from(v.outedges, u)
     return !loop_exists
 end
@@ -435,6 +435,8 @@ function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float6
 
     zero_weight_mode = config.zero_weight
 
+    # count = 0
+
     while numchildren(tree) > 2 &&! isempty(pq)
         l, r = dequeue!(pq)
         if !(l.alive && r.alive)
@@ -442,10 +444,14 @@ function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float6
         end
 
         if !(is_valid_join(l, r; config))
+            # count += 1
             continue
         end
 
         mid = join_nodes!(l, r)
+        # @show length(tree.children), count
+
+        # count = 0
 
         for c = tree.children
             if c == mid || l == c || r == c

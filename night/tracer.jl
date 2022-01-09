@@ -31,7 +31,7 @@ function find_clusterings()
     labels, adj = read_graph(get_graph_path(context))
     g = AlnGraph(context)
     outfile = "scratch/clustering_results.test.txt"
-    if isfile(outfile)
+    if isfile(outfile) && false
         results = open(outfile, "r") do f
             read(f, String)
         end
@@ -43,8 +43,8 @@ function find_clusterings()
         end
     end
     
-    flatclusters = convert_to_flatclusters(results, g)
-    @show check_flatclusters_validity(flatclusters)
+    # flatclusters = convert_to_flatclusters(results, g)
+    # @show check_flatclusters_validity(flatclusters)
 end
 
 function main_task()
@@ -59,7 +59,16 @@ function main_task()
     dump_clusters_to_file(g, "scratch/clusters.julia.txt")
 end
 
-find_clusterings()
+b = @profile begin
+    find_clusterings()
+end
+
+# io = IOBuffer()
+# show(io, "text/plain", b)
+# s = String(take!(io))
+# println(s)
 
 # run_benchmark()
-# Profile.print()
+with open("scratch/profile.txt", "w+") do f
+    Profile.print(f)
+end
