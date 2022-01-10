@@ -2,7 +2,6 @@ using DataStructures
 using SparseArrays
 import Base.IdSet
 using Base.Iterators
-# using ThreadsX
 
 const TDict = OrderedDict
 
