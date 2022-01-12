@@ -5,6 +5,7 @@ using Glob
 using Profile
 using BenchmarkTools
 using Traceur
+using ProfileView
 
 function run_benchmark()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
@@ -55,6 +56,9 @@ function find_fast_clusterings()
     labels, adj = read_graph(get_graph_path(context))
     g = AlnGraph(context)
     results = @time fast_upgma(labels, adj, g; config = ClusteringConfig(true, true))
+    # open("scratch/profile.txt", "w+") do f
+    #     Profile.print(f)
+    # end
     # @time fast_upgma(labels, adj, g; config = ClusteringConfig(true, true))
     # io = IOBuffer()
     # show(io, "text/plain", bench)
@@ -88,6 +92,8 @@ end
 
 # b = @profile begin
 find_fast_clusterings()
+# println("hello")
+# s = readline()
 # find_clusterings()
 # end
 

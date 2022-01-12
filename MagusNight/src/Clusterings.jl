@@ -2,6 +2,7 @@ using DataStructures
 using SparseArrays
 import Base.IdSet
 using Base.Iterators
+# using Base.BitArray
 
 const TDict = OrderedDict
 
@@ -475,15 +476,14 @@ function flat_labels(node :: Node)
     return res
 end
 
-function disjoint_set_partial_order_exists(ds :: IntDisjointSets{Int64}, outedges :: Vector{Vector{Int}}, u :: Int, v :: Int)
+function disjoint_set_partial_order_exists(visited :: BitVector, outedges :: Vector{Vector{Int}}, u :: Int, v :: Int)
     # assumption: u and v are current clusters -- they are roots of disjoint sets
     @inline redirect(x :: Int) = x
     if any(redirect(o) == v for o = outedges[u]) || any(redirect(o) == u for o = outedges[v])
         return false
     end
-    function dfs(u :: Int, v :: Int)
+    function dfs(visited :: BitVector, u :: Int, v :: Int)
         stack = Int[]
-        visited = Set{Int}()
         for e = Set(redirect(x) for x = outedges[u])
             push!(stack, e)
         end
@@ -491,18 +491,19 @@ function disjoint_set_partial_order_exists(ds :: IntDisjointSets{Int64}, outedge
             n = pop!(stack)
             for e_ = outedges[n]
                 e = redirect(e_)
-                if e ∉ visited
+                if !visited[e]
                     if e == v
                         return true
                     end
                     push!(stack, e)
-                    push!(visited, e)
+                    visited[e] = true
                 end
             end
         end
         return false
     end
-    if dfs(u, v) || dfs(v, u)
+    fill!(visited, false)
+    if dfs(visited, u, v) || dfs(visited, v, u)
         return false
     end
     return true
@@ -513,17 +514,21 @@ end
 function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; 
     config :: ClusteringConfig = ClusteringConfig())
     sort!(labels)
+    N = length(labels)
     clusters = IntDisjointSets(length(labels))
     # we C++ now
     pq = BinaryMaxHeap{Tuple{Float64, Int, Int}}()
     rows = Vector{BitSet}(undef, length(labels))
     clustersizes = ones(Int, length(labels))
     node2initialcluster = Dict{Int, Int}()
+    weight_map = Vector{Dict{Int, Float64}}(undef, length(labels))
+    visited = BitVector(undef, length(labels))
     for (i, l) = enumerate(labels)
         node2initialcluster[l] = i
         rows[i] = BitSet([get_node_row(l, graph)])
+        weight_map[i] = Dict{Int, Float64}()
     end
-    weight_map = Dict{Int, Dict{Int, Float64}}() # similarity between two clusters
+
     for (u, map) = similarity_
         for (v, value) = map
             if u == v
@@ -532,12 +537,6 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
             lhs = node2initialcluster[u]
             rhs = node2initialcluster[v]
             lhs, rhs = mkpair(lhs, rhs)
-            if lhs ∉ keys(weight_map)
-                weight_map[lhs] = Dict{Int, Float64}()
-            end
-            if rhs ∉ keys(weight_map)
-                weight_map[rhs] = Dict{Int, Float64}()
-            end
             weight_map[lhs][rhs] = value
             weight_map[rhs][lhs] = value
             push!(pq, (value, lhs, rhs))
@@ -568,12 +567,12 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         end
     end
 
-    absorbed = Set{Int}()
+    absorbed = falses(N)
     invalidated = Set{Tuple{Int, Int}}()
     while !isempty(pq)
         v, l, r = pop!(pq)
         l, r = mkpair(l, r)
-        if l ∈ absorbed || r ∈ absorbed
+        if absorbed[l] || absorbed[r]
             continue
         end
 
@@ -581,7 +580,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
             continue
         end
 
-        if !isempty(rows[l] ∩ rows[r]) || !disjoint_set_partial_order_exists(clusters, order_outedges, l, r)
+        if !isempty(rows[l] ∩ rows[r]) || !disjoint_set_partial_order_exists(visited, order_outedges, l, r)
             delete!(weight_map[l], r)
             delete!(weight_map[r], l)
             push!(invalidated, (l, r))
@@ -591,7 +590,8 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         # now we merge l and r
         n = root_union!(clusters, l, r)
         m = l == n ? r : l # m is the cluster being merged
-        push!(absorbed, m)
+        # push!(absorbed, m)
+        absorbed[m] = true
 
         union!(order_outedges[n], order_outedges[m])
         union!(order_inedges[n], order_inedges[m])
@@ -628,8 +628,10 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         end
 
         # update the sizes
-        clustersizes[n] = clustersizes[l] + clustersizes[r]
-        rows[n] = rows[l] ∪ rows[r]
+        # clustersizes[n] = clustersizes[l] + clustersizes[r]
+        # rows[n] = rows[l] ∪ rows[r]
+        clustersizes[n] += clustersizes[m]
+        union!(rows[n], rows[m])
     end
 
     # naively export the lists
@@ -641,7 +643,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         end
         push!(final_clusters[cid], i)
     end
-    return values(final_clusters)
+    return collect(values(final_clusters))
 end
 
 function upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; 
@@ -747,5 +749,5 @@ function find_clusters(c; config = ClusteringConfig())
     # c, alignment context
     g = AlnGraph(AlnContext(c.workingDir, c.subalignmentPaths); ghostrun = true)
     labels, adj = read_graph(c.graph.graphPath)
-    upgma_naive_clustering(labels, adj, g; config = config)
+    fast_upgma(labels, adj, g; config = config)
 end

@@ -137,6 +137,7 @@ def parseArgs():
     parser.add_argument("-j", "--julia", action="store_true", help="use Julia to speed-up the trace-finding process")
     parser.add_argument("--keepOrder", action="store_false", help="during the UPGMA clustering, ensure that clusters have valid order")
     parser.add_argument("--zeroWeight", action="store_true", help="use zero-averaged weight in the UPGMA clustering step")
+    parser.add_argument("--exp", action="store_true", help="enable experimental features")
     return parser.parse_args()
 
 if __name__ == '__main__':
