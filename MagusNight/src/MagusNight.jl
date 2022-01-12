@@ -558,7 +558,7 @@ precompile(upgma_naive_clustering, (Vector{Int}, Dict{Int, Dict{Int, Float64}}, 
 export min_clusters_search, develop_state, dump_clusters_to_file, AlnContext, AlnGraph
 export purge_duplicate_clusters, purge_cluster_violations, convert_clusters_zerobased, find_trace
 export get_graph_path, read_graph, check_flatclusters_validity, convert_to_flatclusters
-export ClusteringConfig, AlnGraph
-
+export ClusteringConfig, AlnGraph, connected_components
+export fast_upgma
 export find_clusters, upgma_naive_clustering
 end

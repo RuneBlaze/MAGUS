@@ -26,8 +26,14 @@ mutable struct Node
     alive :: Bool
     num_elements :: Int
     rows :: BitSet
+    columns :: Vector{Int}
     outedges :: IdSet{Node}
     inedges :: IdSet{Node}
+end
+
+function dominated(a :: Node, b :: Node)
+    # checks if a is dominated by b
+    return all(a.columns[i] < b.columns[i] for i = a.rows ∩ b.rows)
 end
 
 struct FlatCluster
@@ -42,6 +48,50 @@ struct ClusteringConfig
     zero_weight :: Bool
 
     ClusteringConfig(a = true, b = true, c = false) = new(a, b, c)
+end
+
+function connected_components(labels :: Vector{Int}, digraph :: Dict{Int, Dict{Int, Float64}}, g :: AlnGraph)
+    graph = Dict{Int, Vector{Int}}()
+    for i = labels
+        graph[i] = Int[]
+    end
+
+    for (u, dict) = digraph
+        for (v, _) = dict
+            if u != v
+                push!(graph[u], v)
+                push!(graph[v], u)
+            end
+        end
+    end
+
+    function dfs(node)
+        visited = Set{Int}()
+        stack = Vector{Int}()
+        push!(stack, node)
+        while !isempty(stack)
+            n = pop!(stack)
+            for v in graph[n]
+                if v ∉ visited
+                    push!(stack, v)
+                    push!(visited, v)
+                end
+            end
+        end
+        visited
+    end
+
+    unvisited = Set{Int}(labels)
+    cc = []
+    while !isempty(unvisited)
+        n = pop!(unvisited)
+        visited = dfs(n)
+        if !isempty(visited)
+            push!(cc, (nodes = visited, rows = BitSet(get_node_row(i, g) for i = visited)))
+        end
+        setdiff!(unvisited, visited)
+    end
+    return cc
 end
 
 # ClusteringConfig() = ClusteringConfig(true, true, true)
@@ -101,7 +151,7 @@ function check_flatclusters_validity(flatclusters)
             d[partial_wellordered(lhs, rhs)] += 1
         end
     end
-    return d
+    return (d, n, extrema(length(i.nodes) for i = flatclusters))
 end
 
 function naive_newick(n :: Node)
@@ -122,23 +172,35 @@ function Base.isless(lhs :: Node, rhs :: Node)
     return Base.isless(objectid(lhs), objectid(rhs))
 end
 
-function Node(a, b, c, d, e, f)
-    return Node(a, b, c, d, e, f, IdSet(), IdSet())
+function Node(a, b, c, d, e, f, g)
+    return Node(a, b, c, d, e, f, g, IdSet(), IdSet())
 end
 
 function Node()
-    return Node(Set(), nothing, nothing, true, 0, BitSet())
+    return Node(Set(), nothing, nothing, true, 0, BitSet(), [])
+end
+
+function node_with_similar(n :: Node)
+    return Node(Set(), nothing, nothing, true, 0, BitSet(), zeros(Int, length(n.columns)))
 end
 
 function Node(i :: Int)
-    return Node(Set(), nothing, i, true, 1, BitSet())
+    return Node(Set(), nothing, i, true, 1, BitSet(), [])
 end
 
 @inline get_node_pos(i :: Int, g :: AlnGraph) = g.mat_subposmap[i + 1]
 @inline get_node_row(i :: Int, g :: AlnGraph) = get_node_pos(i, g)[1]
 
+function initial_columns_for_node(i :: Int, g :: AlnGraph)
+    pos = get_node_pos(i, g)
+    k = length(g.subaln_lengths)
+    r = zeros(Int, k)
+    r[pos[1]] = pos[2]
+    return r
+end
+
 function Node(i :: Int, g :: AlnGraph)
-    return Node(Set(), nothing, i, true, 1, BitSet([get_node_row(i, g)]))
+    return Node(Set(), nothing, i, true, 1, BitSet([get_node_row(i, g)]), initial_columns_for_node(i, g))
 end
 
 function connect!(u :: Node, v :: Node)
@@ -226,6 +288,21 @@ function dfs_exists_partial_order(root :: Node, u :: Node, v :: Node)
     return !loop_exists
 end
 
+function constant_exists_partial_order(root :: Node, u :: Node, v :: Node)
+    mid = node_with_similar(u)
+    mid.outedges = u.outedges ∪ v.outedges
+    mid.inedges = u.inedges ∪ v.inedges
+    mid.rows = u.rows ∪ v.rows
+    for i = u.rows
+        mid.columns[i] = u.columns[i]
+    end
+    for i = v.rows
+        mid.columns[i] = v.columns[i]
+    end
+    r = all(dominated(mid, o) for o = mid.outedges) && all(dominated(i, mid) for i = mid.inedges)
+    return r
+end
+
 function exists_partial_order(root :: Node, u :: Node, v :: Node)
     # check that after joining u and v in the tree rooted at root,
     # the partial order defined by incidence is still a valid partial order by toposort
@@ -311,23 +388,20 @@ function join_nodes!(lhs :: Node, rhs :: Node)
     lhs.alive = false
     rhs.alive = false
     orig_parent = lhs.parent
-    mid = Node()
+    mid = node_with_similar(lhs)
     mid.rows = lhs.rows ∪ rhs.rows
+    for i = lhs.rows
+        mid.columns[i] = lhs.columns[i]
+    end
+    for i = rhs.rows
+        mid.columns[i] = rhs.columns[i]
+    end
     add_child!(mid, lhs)
     add_child!(mid, rhs)
     remove_child!(orig_parent, lhs)
     remove_child!(orig_parent, rhs)
     add_child!(orig_parent, mid)
     contract!(lhs, rhs, mid)
-    # for e = mid.parent.children
-    #     for c = e.outedges
-    #         @assert c.alive
-    #     end
-
-    #     for c = e.inedges
-    #         @assert c.alive "$(c == lhs) $(c == rhs) $(c == mid)"
-    #     end
-    # end
     mid
 end
 
@@ -338,8 +412,12 @@ function is_valid_join(u :: Node, v :: Node; config :: ClusteringConfig)
     if config.prevent_vertical_violations && !isempty(u.rows ∩ v.rows)
         return false
     end
-    if config.ensure_order && !dfs_exists_partial_order(root, u, v)
-        return false
+
+    if config.ensure_order
+        b = dfs_exists_partial_order(root, u, v)
+        if !b
+            return false
+        end
     end
     return true
 end
@@ -397,6 +475,161 @@ function flat_labels(node :: Node)
     return res
 end
 
+function disjoint_set_partial_order_exists(ds :: IntDisjointSets{Int64}, outedges :: Vector{Vector{Int}}, u :: Int, v :: Int)
+    # assumption: u and v are current clusters -- they are roots of disjoint sets
+    @inline redirect(x :: Int) = find_root(ds, x)
+    if any(redirect(o) == v for o = outedges[u]) || any(redirect(o) == u for o = outedges[v])
+        return false
+    end
+    function dfs(u :: Int, v :: Int)
+        stack = Int[]
+        visited = Set{Int}()
+        for e = Set(redirect(x) for x = outedges[u])
+            push!(stack, e)
+        end
+        while !isempty(stack)
+            n = pop!(stack)
+            for e_ = outedges[n]
+                e = redirect(e_)
+                if e ∉ visited
+                    if e == v
+                        return true
+                    end
+                    push!(stack, e)
+                    push!(visited, e)
+                end
+            end
+        end
+        return false
+    end
+    if dfs(u, v) || dfs(v, u)
+        return false
+    end
+    return true
+end
+
+@inline mkpair(a, b) = a < b ? (a, b) : (b, a)
+# This time let's just do it right
+function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; 
+    config :: ClusteringConfig = ClusteringConfig())
+    sort!(labels)
+    clusters = IntDisjointSets(length(labels))
+    # we C++ now
+    pq = PriorityQueue{Tuple{Int, Int}, Float64}(Base.Order.Reverse)
+    rows = Vector{BitSet}(undef, length(labels))
+    clustersizes = ones(Int, length(labels))
+    node2initialcluster = Dict{Int, Int}()
+    for (i, l) = enumerate(labels)
+        node2initialcluster[l] = i
+        rows[i] = BitSet([get_node_row(l, graph)])
+    end
+    weight_map = Dict{Int, Dict{Int, Float64}}() # similarity between two clusters
+    for (u, map) = similarity_
+        for (v, value) = map
+            if u == v
+                continue
+            end
+            lhs = node2initialcluster[u]
+            rhs = node2initialcluster[v]
+            lhs, rhs = mkpair(lhs, rhs)
+            if lhs ∉ keys(weight_map)
+                weight_map[lhs] = Dict{Int, Float64}()
+            end
+            if rhs ∉ keys(weight_map)
+                weight_map[rhs] = Dict{Int, Float64}()
+            end
+            weight_map[lhs][rhs] = value
+            weight_map[rhs][lhs] = value
+            enqueue!(pq, (lhs, rhs), value)
+        end
+    end
+
+    order_outedges = Vector{Int}[]
+    # order_inedges = Vector{Int}[]
+    for _ = 1:length(labels)
+        push!(order_outedges, Int[])
+        # push!(order_inedges, Int[])
+    end
+    bound = 0
+    lengths = Iterators.Stateful(graph.subaln_lengths)
+    total_connected = 0
+    for i = 1:(length(labels)-1)
+        first_num = labels[i]
+        second_num = labels[i + 1]
+
+        # invariant: the first num < bound
+        while !(first_num < bound)
+            bound += popfirst!(lengths)
+        end
+        if first_num < bound && second_num < bound
+            push!(order_outedges[node2initialcluster[first_num]], node2initialcluster[second_num])
+            total_connected += 1
+        end
+    end
+
+    absorbed = Set{Int}()
+    invalidated = Set{Tuple{Int, Int}}()
+    while !isempty(pq)
+        _, v = peek(pq)
+        l, r = dequeue!(pq)
+        l, r = mkpair(l, r)
+        if l ∈ absorbed || r ∈ absorbed
+            continue
+        end
+
+        if (l, r) ∈ invalidated || v != weight_map[l][r]
+            continue
+        end
+
+        if !isempty(rows[l] ∩ rows[r]) || !disjoint_set_partial_order_exists(clusters, order_outedges, l, r)
+            delete!(weight_map[l], r)
+            delete!(weight_map[r], l)
+            push!(invalidated, (l, r))
+            continue
+        end
+
+        # now we merge l and r
+        n = root_union!(clusters, l, r)
+        m = l == n ? r : l # m is the cluster being merged
+        push!(absorbed, m)
+
+        # we update the order graph. This is not the most efficient way to do things
+        # but we don't care for now. This obviously has more allocations
+        # than necessary
+        order_outedges[n] = order_outedges[n] ∪ order_outedges[m]
+        # let's try a naive disjoint set thing
+
+        # we update the weights. Remember, we are doing UPGMA
+        for c = keys(weight_map[l]) ∪ keys(weight_map[r])
+            # our job is to assign weight_map[c][n].
+            # we should be able to do this in-place
+            if haskey(weight_map[l], c) && haskey(weight_map[r], c)
+                weight_map[n][c] = (weight_map[l][c] * clustersizes[l] + weight_map[r][c] * clustersizes[r])/(clustersizes[l] + clustersizes[r])
+            elseif haskey(weight_map[l], c)
+                weight_map[n][c] = weight_map[l][c]
+            else
+                weight_map[n][c] = weight_map[r][c]
+            end
+            weight_map[c][n] = weight_map[n][c]
+        end
+
+        # update the sizes
+        clustersizes[n] = clustersizes[l] + clustersizes[r]
+        rows[n] = rows[l] ∪ rows[r]
+    end
+
+    # naively export the lists
+    final_clusters = Dict{Int, Vector{Int}}()
+    for i = labels
+        cid = find_root(clusters, node2initialcluster[i])
+        if !haskey(final_clusters, cid)
+            final_clusters[cid] = Vector{Int}()
+        end
+        push!(final_clusters[cid], i)
+    end
+    return values(final_clusters)
+end
+
 function upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; 
     order = Base.Order.Reverse, config :: ClusteringConfig = ClusteringConfig())
     tree = star_tree(labels, graph)
@@ -430,11 +663,8 @@ function read_graph(io)
 end
 
 function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float64}; config :: ClusteringConfig)
-    @inline mkpair(a, b) = a < b ? (a, b) : (b, a)
 
     zero_weight_mode = config.zero_weight
-
-    # count = 0
 
     while numchildren(tree) > 2 &&! isempty(pq)
         l, r = dequeue!(pq)
@@ -443,15 +673,9 @@ function upgma_step2(tree :: Node, pq :: PriorityQueue{Tuple{Node, Node}, Float6
         end
 
         if !(is_valid_join(l, r; config))
-            # count += 1
             continue
         end
-
         mid = join_nodes!(l, r)
-        # @show length(tree.children), count
-
-        # count = 0
-
         for c = tree.children
             if c == mid || l == c || r == c
                 continue
@@ -511,18 +735,3 @@ function find_clusters(c; config = ClusteringConfig())
     labels, adj = read_graph(c.graph.graphPath)
     upgma_naive_clustering(labels, adj, g; config = config)
 end
-
-# labels, G = read_graph("/home/lbq/research/datasets/UnalignFragTree/high_frag/1000M1/R0/unaligned_all.magus_take2_false/graph/graph.txt")
-# open("res.txt", "w+") do f
-#     r = upgma_naive_clustering(labels, G; size_limit = 25)
-#     println(f, r)
-# end
-
-# using BenchmarkTools
-# upgma_naive_clustering(
-#     [1,2,3,4,5],
-#     Dict(1 => Dict(2 => 17.0, 3 => 21.0, 4 => 31.0, 5 => 23.0),
-#     2 => Dict(3 => 30.0, 4 => 34.0, 5 => 21.0),
-#     3 => Dict(4 => 28.0, 5 => 39.0),
-#     4 => Dict(5 => 43.0)); size_limit = 3
-# )

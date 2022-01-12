@@ -43,8 +43,31 @@ function find_clusterings()
         end
     end
     
-    # flatclusters = convert_to_flatclusters(results, g)
-    # @show check_flatclusters_validity(flatclusters)
+    flatclusters = convert_to_flatclusters(results, g)
+    @show check_flatclusters_validity(flatclusters)
+end
+
+function find_fast_clusterings()
+    workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
+    b = glob(joinpath(workingdir, "subalignments","*"))
+    sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
+    context = AlnContext(workingdir, b)
+    labels, adj = read_graph(get_graph_path(context))
+    g = AlnGraph(context)
+    results = fast_upgma(labels, adj, g; config = ClusteringConfig(true, true))
+    flatclusters = convert_to_flatclusters(results, g)
+    @show check_flatclusters_validity(flatclusters)
+end
+
+function find_decompositions()
+    workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
+    b = glob(joinpath(workingdir, "subalignments","*"))
+    sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
+    context = AlnContext(workingdir, b)
+    labels, adj = read_graph(get_graph_path(context))
+    g = AlnGraph(context)
+    cc = [(length(e.rows), length(e.nodes)) for e = connected_components(labels, adj, g)]
+    println(cc)
 end
 
 function main_task()
@@ -59,9 +82,10 @@ function main_task()
     dump_clusters_to_file(g, "scratch/clusters.julia.txt")
 end
 
-b = @profile begin
-    find_clusterings()
-end
+# b = @profile begin
+find_clusterings()
+# find_clusterings()
+# end
 
 # io = IOBuffer()
 # show(io, "text/plain", b)
@@ -69,6 +93,6 @@ end
 # println(s)
 
 # run_benchmark()
-with open("scratch/profile.txt", "w+") do f
-    Profile.print(f)
-end
+# with open("scratch/profile.txt", "w+") do f
+#     Profile.print(f)
+# end
