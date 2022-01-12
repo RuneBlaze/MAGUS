@@ -477,7 +477,7 @@ end
 
 function disjoint_set_partial_order_exists(ds :: IntDisjointSets{Int64}, outedges :: Vector{Vector{Int}}, u :: Int, v :: Int)
     # assumption: u and v are current clusters -- they are roots of disjoint sets
-    @inline redirect(x :: Int) = find_root(ds, x)
+    @inline redirect(x :: Int) = x
     if any(redirect(o) == v for o = outedges[u]) || any(redirect(o) == u for o = outedges[v])
         return false
     end
@@ -545,10 +545,10 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
     end
 
     order_outedges = Vector{Int}[]
-    # order_inedges = Vector{Int}[]
+    order_inedges = Vector{Int}[]
     for _ = 1:length(labels)
         push!(order_outedges, Int[])
-        # push!(order_inedges, Int[])
+        push!(order_inedges, Int[])
     end
     bound = 0
     lengths = Iterators.Stateful(graph.subaln_lengths)
@@ -563,6 +563,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         end
         if first_num < bound && second_num < bound
             push!(order_outedges[node2initialcluster[first_num]], node2initialcluster[second_num])
+            push!(order_inedges[node2initialcluster[second_num]], node2initialcluster[first_num])
             total_connected += 1
         end
     end
@@ -592,10 +593,23 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         m = l == n ? r : l # m is the cluster being merged
         push!(absorbed, m)
 
-        # we update the order graph. This is not the most efficient way to do things
-        # but we don't care for now. This obviously has more allocations
-        # than necessary
-        order_outedges[n] = order_outedges[n] ∪ order_outedges[m]
+        union!(order_outedges[n], order_outedges[m])
+        union!(order_inedges[n], order_inedges[m])
+        for innode = order_inedges[m]
+            for (i, e) = enumerate(order_outedges[innode])
+                if e == m
+                    order_outedges[innode][i] = n
+                end
+            end
+        end
+        for outnode = order_outedges[m]
+            for (i, e) = enumerate(order_inedges[outnode])
+                if e == m
+                    order_inedges[outnode][i] = n
+                end
+            end
+        end
+
         # let's try a naive disjoint set thing
 
         # we update the weights. Remember, we are doing UPGMA
