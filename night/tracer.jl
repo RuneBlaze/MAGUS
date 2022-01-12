@@ -54,9 +54,13 @@ function find_fast_clusterings()
     context = AlnContext(workingdir, b)
     labels, adj = read_graph(get_graph_path(context))
     g = AlnGraph(context)
-    results = fast_upgma(labels, adj, g; config = ClusteringConfig(true, true))
-    flatclusters = convert_to_flatclusters(results, g)
-    @show check_flatclusters_validity(flatclusters)
+    @time fast_upgma(labels, adj, g; config = ClusteringConfig(true, true))
+    @time fast_upgma(labels, adj, g; config = ClusteringConfig(true, true))
+    # io = IOBuffer()
+    # show(io, "text/plain", bench)
+    # println(String(take!(io)))
+    # flatclusters = convert_to_flatclusters(results, g)
+    # @show check_flatclusters_validity(flatclusters)
 end
 
 function find_decompositions()
@@ -83,7 +87,7 @@ function main_task()
 end
 
 # b = @profile begin
-find_clusterings()
+find_fast_clusterings()
 # find_clusterings()
 # end
 

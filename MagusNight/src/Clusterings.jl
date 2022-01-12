@@ -515,7 +515,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
     sort!(labels)
     clusters = IntDisjointSets(length(labels))
     # we C++ now
-    pq = PriorityQueue{Tuple{Int, Int}, Float64}(Base.Order.Reverse)
+    pq = BinaryMaxHeap{Tuple{Float64, Int, Int}}()
     rows = Vector{BitSet}(undef, length(labels))
     clustersizes = ones(Int, length(labels))
     node2initialcluster = Dict{Int, Int}()
@@ -540,7 +540,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
             end
             weight_map[lhs][rhs] = value
             weight_map[rhs][lhs] = value
-            enqueue!(pq, (lhs, rhs), value)
+            push!(pq, (value, lhs, rhs))
         end
     end
 
@@ -570,8 +570,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
     absorbed = Set{Int}()
     invalidated = Set{Tuple{Int, Int}}()
     while !isempty(pq)
-        _, v = peek(pq)
-        l, r = dequeue!(pq)
+        v, l, r = pop!(pq)
         l, r = mkpair(l, r)
         if l ∈ absorbed || r ∈ absorbed
             continue
@@ -611,6 +610,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
                 weight_map[n][c] = weight_map[r][c]
             end
             weight_map[c][n] = weight_map[n][c]
+            push!(pq, (weight_map[c][n], mkpair(c, n)...))
         end
 
         # update the sizes
