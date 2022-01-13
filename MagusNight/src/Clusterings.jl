@@ -476,36 +476,56 @@ function flat_labels(node :: Node)
     return res
 end
 
-function disjoint_set_partial_order_exists(visited :: BitVector, outedges :: Vector{Vector{Int}}, u :: Int, v :: Int)
-    # assumption: u and v are current clusters -- they are roots of disjoint sets
-    @inline redirect(x :: Int) = x
-    if any(redirect(o) == v for o = outedges[u]) || any(redirect(o) == u for o = outedges[v])
-        return false
+function ds_dfs(outedges :: Vector{Vector{Int}}, visited :: BitVector, u :: Int, v :: Int)
+    stack = Int[]
+    for e = Set(x for x = outedges[u])
+        push!(stack, e)
     end
-    function dfs(visited :: BitVector, u :: Int, v :: Int)
-        stack = Int[]
-        for e = Set(redirect(x) for x = outedges[u])
-            push!(stack, e)
-        end
-        while !isempty(stack)
-            n = pop!(stack)
-            for e_ = outedges[n]
-                e = redirect(e_)
-                if !visited[e]
-                    if e == v
-                        return true
-                    end
-                    push!(stack, e)
-                    visited[e] = true
+    while !isempty(stack)
+        n = pop!(stack)
+        for e = outedges[n]
+            if !visited[e]
+                if e == v
+                    return true
                 end
+                push!(stack, e)
+                visited[e] = true
             end
         end
+    end
+    return false
+end
+
+function disjoint_set_partial_order_exists(visited :: BitVector, outedges :: Vector{Vector{Int}}, u :: Int, v :: Int, mid :: Int, mid_visited :: BitVector)
+    # assumption: u and v are current clusters -- they are roots of disjoint sets
+    # @inline redirect(x :: Int) = x
+    if v ∈ outedges[u] && u ∈ outedges[v]
         return false
     end
+
+    @inline dfs(a, b, c) = ds_dfs(outedges, a, b, c)
+
     fill!(visited, false)
-    if dfs(visited, u, v) || dfs(visited, v, u)
-        return false
+    if mid_visited[u] && mid_visited[v]
+        if dfs(visited, u, v) || dfs(visited, v, u)
+            return false
+        end
+    elseif mid_visited[u] # mid < u, v not
+        if dfs(visited, v, u)
+            return false
+        end
+    elseif mid_visited[v]
+        if dfs(visited, u, v)
+            return false
+        end
+    else
+        if dfs(visited, u, v) || dfs(visited, v, u)
+            return false
+        end
     end
+
+    mid_visited = visited
+    visited = BitVector(undef, length(outedges))
     return true
 end
 
@@ -523,6 +543,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
     node2initialcluster = Dict{Int, Int}()
     weight_map = Vector{Dict{Int, Float64}}(undef, length(labels))
     visited = BitVector(undef, length(labels))
+    mid_visited = falses(length(labels))
     for (i, l) = enumerate(labels)
         node2initialcluster[l] = i
         rows[i] = BitSet([get_node_row(l, graph)])
@@ -569,6 +590,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
 
     absorbed = falses(N)
     invalidated = Set{Tuple{Int, Int}}()
+    mid = -1
     while !isempty(pq)
         v, l, r = pop!(pq)
         l, r = mkpair(l, r)
@@ -580,7 +602,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
             continue
         end
 
-        if !isempty(rows[l] ∩ rows[r]) || !disjoint_set_partial_order_exists(visited, order_outedges, l, r)
+        if !isempty(rows[l] ∩ rows[r]) || !disjoint_set_partial_order_exists(visited, order_outedges, l, r, mid, mid_visited)
             delete!(weight_map[l], r)
             delete!(weight_map[r], l)
             push!(invalidated, (l, r))
@@ -590,9 +612,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         # now we merge l and r
         n = root_union!(clusters, l, r)
         m = l == n ? r : l # m is the cluster being merged
-        # push!(absorbed, m)
         absorbed[m] = true
-
         union!(order_outedges[n], order_outedges[m])
         union!(order_inedges[n], order_inedges[m])
         for innode = order_inedges[m]
@@ -610,27 +630,28 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
             end
         end
 
-        # let's try a naive disjoint set thing
-
         # we update the weights. Remember, we are doing UPGMA
         for c = keys(weight_map[l]) ∪ keys(weight_map[r])
             # our job is to assign weight_map[c][n].
             # we should be able to do this in-place
-            if haskey(weight_map[l], c) && haskey(weight_map[r], c)
-                weight_map[n][c] = (weight_map[l][c] * clustersizes[l] + weight_map[r][c] * clustersizes[r])/(clustersizes[l] + clustersizes[r])
-            elseif haskey(weight_map[l], c)
-                weight_map[n][c] = weight_map[l][c]
+            if config.zero_weight
+                weight_map[n][c] = (get(weight_map[l], c, 0) * clustersizes[l] + get(weight_map[r], c, 0) * clustersizes[r])/(clustersizes[l] + clustersizes[r])
             else
-                weight_map[n][c] = weight_map[r][c]
+                if haskey(weight_map[l], c) && haskey(weight_map[r], c)
+                    weight_map[n][c] = (weight_map[l][c] * clustersizes[l] + weight_map[r][c] * clustersizes[r])/(clustersizes[l] + clustersizes[r])
+                elseif haskey(weight_map[l], c)
+                    weight_map[n][c] = weight_map[l][c]
+                else
+                    weight_map[n][c] = weight_map[r][c]
+                end
             end
             weight_map[c][n] = weight_map[n][c]
             push!(pq, (weight_map[c][n], mkpair(c, n)...))
         end
 
         # update the sizes
-        # clustersizes[n] = clustersizes[l] + clustersizes[r]
-        # rows[n] = rows[l] ∪ rows[r]
         clustersizes[n] += clustersizes[m]
+        mid = n
         union!(rows[n], rows[m])
     end
 
