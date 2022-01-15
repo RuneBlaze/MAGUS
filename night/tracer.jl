@@ -24,6 +24,17 @@ function run_benchmark()
     println(s)
 end
 
+function debug_print_trace()
+    workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
+    b = glob(joinpath(workingdir, "subalignments","*"))
+    sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
+    context = AlnContext(workingdir, b)
+    g = AlnGraph(context)
+    open("scratch/trace.txt", "w") do f
+        debug_print_mapped_graph(f, g)
+    end
+end
+
 function find_clusterings()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
     b = glob(joinpath(workingdir, "subalignments","*"))
@@ -91,10 +102,10 @@ function main_task()
 end
 
 # b = @profile begin
-find_fast_clusterings()
+# debug_print_trace()
 # println("hello")
 # s = readline()
-# find_clusterings()
+find_fast_clusterings()
 # end
 
 # io = IOBuffer()

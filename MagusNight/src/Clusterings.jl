@@ -423,6 +423,16 @@ function is_valid_join(u :: Node, v :: Node; config :: ClusteringConfig)
     return true
 end
 
+function debug_print_mapped_graph(io, graph :: AlnGraph)
+    for c = graph.clusters
+        for i = c
+            print(io, graph.mat_subposmap[i])
+            print(io, " ")
+        end
+        println(io)
+    end
+end
+
 function star_tree(labels :: Vector{Int}, graph :: AlnGraph)
     leaves = [Node(n, graph) for n in labels]
     sort!(leaves; by = x -> x.label)
@@ -529,6 +539,39 @@ function disjoint_set_partial_order_exists(visited :: BitVector, outedges :: Vec
     return true
 end
 
+function order_clusters(absorbed :: BitVector, outedges :: Vector{Vector{Int}})
+    N = length(outedges)
+    indegs = zeros(Int, N)
+    for (ix, i) = enumerate(outedges)
+        if !absorbed[ix]
+            for e = i
+                indegs[e] += 1
+            end
+        end
+    end
+
+    stack = Int[]
+    for (i, e) = enumerate(indegs)
+        if !absorbed[i] && e == 0
+            push!(stack, i)
+        end
+    end
+
+    order = Int[]
+    # naive toposort
+    while !isempty(stack)
+        t = pop!(stack)
+        push!(order, t)
+        for e = outedges[t]
+            indegs[e] -= 1
+            if indegs[e] == 0
+                push!(stack, e)
+            end
+        end
+    end
+    return order
+end
+
 @inline mkpair(a, b) = a < b ? (a, b) : (b, a)
 # This time let's just do it right
 function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; 
@@ -564,11 +607,11 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         end
     end
 
-    order_outedges = Vector{Int}[]
-    order_inedges = Vector{Int}[]
-    for _ = 1:length(labels)
-        push!(order_outedges, Int[])
-        push!(order_inedges, Int[])
+    order_outedges = Vector{Vector{Int}}(undef, length(labels))
+    order_inedges = Vector{Vector{Int}}(undef, length(labels))
+    for i = 1:length(labels)
+        order_outedges[i] = Int[]
+        order_inedges[i] = Int[]
     end
     bound = 0
     lengths = Iterators.Stateful(graph.subaln_lengths)
@@ -655,6 +698,7 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         union!(rows[n], rows[m])
     end
 
+    cluster_ordering = order_clusters(absorbed, order_outedges)
     # naively export the lists
     final_clusters = Dict{Int, Vector{Int}}()
     for i = labels
@@ -664,7 +708,11 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
         end
         push!(final_clusters[cid], i)
     end
-    return collect(values(final_clusters))
+    clusters = Vector{Vector{Int}}(undef, length(cluster_ordering))
+    for (i, j) = enumerate(cluster_ordering)
+        clusters[i] = final_clusters[j]
+    end
+    return clusters
 end
 
 function upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Float64}}, graph :: AlnGraph; 
