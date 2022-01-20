@@ -1,7 +1,7 @@
 # random walk with restart
 using SparseArrays
 using LinearAlgebra
-using LowRankApprox
+# using LowRankApprox
 
 function rwr_matrix_for(cc_ :: Set{Int}, digraph :: Dict{Int, Dict{Int, Float64}})
     cc = collect(cc_)
@@ -83,8 +83,9 @@ end
 
 function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{Int, Float64}}, alngraph :: AlnGraph)
     newgraph = Dict{Int, Dict{Int, Float64}}()
-    for cc_ = connected_components(labels, digraph, alngraph)
-        println("dealing with new connected component")
+    ccs = connected_components(labels, digraph, alngraph)
+    for (cc_ix, cc_) = enumerate(ccs)
+        println("dealing with new connected component $cc_ix out of $(length(ccs))")
         cc = cc_.nodes
         cc_iter = collect(cc)
         sort!(cc_iter)
@@ -92,7 +93,7 @@ function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{In
         println("obtained setup for rwr")
         N = length(cc)
         A = rwr_setup.A
-        sA = Symmetric(A)
+        # sA = Symmetric(A)
         R = zeros(Float32, N, N)
         forward = rwr_setup.forward
         backward = rwr_setup.backward
@@ -102,7 +103,7 @@ function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{In
                 println("Progress: $cnt out of $N, roughly $(round(cnt / N * 100))%")
             end
             start_node = forward[i]
-            R[start_node, :] = rwr(start_node, sA)
+            R[start_node, :] = rwr(start_node, A)
         end
         R += transpose(R)
         max_r = maximum(R)
