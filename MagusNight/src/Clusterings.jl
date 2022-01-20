@@ -47,8 +47,9 @@ struct ClusteringConfig
     prevent_vertical_violations :: Bool
     ensure_order :: Bool
     zero_weight :: Bool
+    clean_forbidden :: Bool
 
-    ClusteringConfig(a = true, b = true, c = false) = new(a, b, c)
+    ClusteringConfig(a = true, b = true, c = false, d = false) = new(a, b, c, d)
 end
 
 function connected_components(labels :: Vector{Int}, digraph :: Dict{Int, Dict{Int, Float64}}, g :: AlnGraph)
@@ -537,7 +538,8 @@ function fast_upgma(labels :: Vector{Int}, similarity_ :: Dict{Int, Dict{Int, Fl
     N = length(labels)
     clusters = IntDisjointSets(length(labels))
     # we C++ now
-    pq = BinaryMaxHeap{Tuple{Float64, Int, Int}}()
+    # pq = BinaryMaxHeap{Tuple{Float64, Int, Int}}()
+    pq = BinaryHeap{Tuple{Float64, Int, Int}, DataStructures.FasterReverse}()
     rows = Vector{BitSet}(undef, length(labels))
     clustersizes = ones(Int, length(labels))
     node2initialcluster = Dict{Int, Int}()

@@ -20,6 +20,7 @@ MCL is the main way to do this, but rg could be used if there are scalability is
 
 def clusterGraph(graph):
     time1 = time.time()
+    Configs.log(f"Received alignment graph with path {graph.graphPath}")
     
     if os.path.exists(graph.clusterPath):
         Configs.log("Found existing cluster file {}".format(graph.clusterPath))
@@ -29,14 +30,15 @@ def clusterGraph(graph):
         runMclClustering(graph)
 
     elif Configs.graphClusterMethod == "upgma":
-        # FIXME: duplicate code!
-        from sys import path
-        from os.path import join
-        from julia import Julia
-        jl = Julia()
-        p = join(path[0], 'MagusNight')
-        jl.eval(f'push!(LOAD_PATH, "{p}")') 
-        from julia import MagusNight
+        from align.merge.magus_night import MagusNight
+        # # FIXME: duplicate code!
+        # from sys import path
+        # from os.path import join
+        # from julia import Julia
+        # jl = Julia()
+        # p = join(path[0], 'MagusNight')
+        # jl.eval(f'push!(LOAD_PATH, "{p}")') 
+        # from julia import MagusNight
         upgma_config = MagusNight.ClusteringConfig(True, Configs.upgmaKeepOrder, Configs.upgmaZeroWeight)
         Configs.log(f"Running UPGMA clustering with configuration: {upgma_config}")
         r = MagusNight.find_clusters(graph.context, config = upgma_config)

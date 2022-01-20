@@ -4,6 +4,8 @@ using SparseArrays
 using Base.Filesystem
 using DataStructures
 include("Clusterings.jl")
+include("RWR.jl")
+include("Filtering.jl")
 
 mutable struct AlnContext
     workingdir :: String
@@ -561,4 +563,6 @@ export get_graph_path, read_graph, check_flatclusters_validity, convert_to_flatc
 export ClusteringConfig, AlnGraph, connected_components
 export fast_upgma
 export find_clusters, upgma_naive_clustering
+export rwr_normalize_graph, elementary_digraph_stats, dump_graph_to_file
+export apply_transformation
 end

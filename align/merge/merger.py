@@ -9,6 +9,7 @@ import time
 
 
 from align.merge.graph_build.graph_builder import buildGraph
+from align.merge.graph_transform.transformer import transformGraph
 from align.merge.graph_cluster.clusterer import clusterGraph
 from align.merge.graph_trace.tracer import findTrace
 from align.merge.optimizer import optimizeTrace
@@ -21,6 +22,7 @@ def mergeSubalignments(context):
     time1 = time.time()  
     
     buildGraph(context)
+    transformGraph(context.graph)
     clusterGraph(context.graph)
     findTrace(context.graph)
     optimizeTrace(context.graph)    

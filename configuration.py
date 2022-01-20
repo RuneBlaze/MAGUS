@@ -35,6 +35,7 @@ class Configs:
     graphBuildMethod = "mafft"
     graphBuildHmmExtend = False
     graphBuildRestrict = False
+    graphTransformMethod = None
     graphClusterMethod = "mcl" 
     graphTraceMethod = "minclusters"
     graphTraceOptimize = False
@@ -175,5 +176,6 @@ def buildConfigs(args):
     Configs.upgmaKeepOrder = args.keepOrder
     Configs.upgmaZeroWeight = args.zeroWeight
     Configs.exp = args.exp
+    Configs.graphTransformMethod = args.transform
     
     Configs.alignmentSizeLimit = args.alignsizelimit

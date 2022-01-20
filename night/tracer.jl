@@ -4,8 +4,8 @@ using MagusNight
 using Glob
 using Profile
 using BenchmarkTools
-using Traceur
-using ProfileView
+# using Traceur
+# using ProfileView
 
 function run_benchmark()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
@@ -67,6 +67,24 @@ function find_fast_clusterings()
     @show check_flatclusters_validity(flatclusters)
 end
 
+function test_rwr()
+    workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
+    b = glob(joinpath(workingdir, "subalignments","*"))
+    sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
+    context = AlnContext(workingdir, b)
+    labels, adj = read_graph(get_graph_path(context))
+    g = AlnGraph(context)
+    @show elementary_digraph_stats(labels, adj)
+    newgraph = rwr_normalize_graph(labels, adj, g)
+    @show elementary_digraph_stats(labels, newgraph)
+    open("scratch/rwr_test.txt", "w+") do f
+        dump_graph_to_file(f, newgraph)
+    end
+    # results = @time fast_upgma(labels, adj, g; config = ClusteringConfig(true, true))
+    # flatclusters = convert_to_flatclusters(results, g)
+    # @show check_flatclusters_validity(flatclusters)
+end
+
 function find_decompositions()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
     b = glob(joinpath(workingdir, "subalignments","*"))
@@ -91,7 +109,8 @@ function main_task()
 end
 
 # b = @profile begin
-find_fast_clusterings()
+# find_fast_clusterings()
+test_rwr()
 # println("hello")
 # s = readline()
 # find_clusterings()
