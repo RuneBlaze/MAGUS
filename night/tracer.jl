@@ -9,7 +9,7 @@ using BenchmarkTools
 
 function run_benchmark()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
-    b = glob(joinpath(workingdir, "subalignments","*"))
+    b = glob(joinpath(workingdir, "subalignments", "*"))
     sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
     context = AlnContext(workingdir, b)
     b = @benchmark begin
@@ -17,7 +17,7 @@ function run_benchmark()
         purge_duplicate_clusters(g)
         purge_cluster_violations(g)
         min_clusters_search(g)
-    end seconds=60
+    end seconds = 60
     io = IOBuffer()
     show(io, "text/plain", b)
     s = String(take!(io))
@@ -26,7 +26,7 @@ end
 
 function debug_print_trace()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
-    b = glob(joinpath(workingdir, "subalignments","*"))
+    b = glob(joinpath(workingdir, "subalignments", "*"))
     sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
     context = AlnContext(workingdir, b)
     g = AlnGraph(context)
@@ -37,7 +37,7 @@ end
 
 function find_clusterings()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
-    b = glob(joinpath(workingdir, "subalignments","*"))
+    b = glob(joinpath(workingdir, "subalignments", "*"))
     sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
     context = AlnContext(workingdir, b)
     labels, adj = read_graph(get_graph_path(context))
@@ -49,19 +49,20 @@ function find_clusterings()
         end
         results = eval(Meta.parse(results))
     else
-        results = upgma_naive_clustering(labels, adj, g; config = ClusteringConfig(true, true))
+        results =
+            upgma_naive_clustering(labels, adj, g; config = ClusteringConfig(true, true))
         open(outfile, "w+") do f
             println(f, results)
         end
     end
-    
+
     flatclusters = convert_to_flatclusters(results, g)
     @show check_flatclusters_validity(flatclusters)
 end
 
 function find_fast_clusterings()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
-    b = glob(joinpath(workingdir, "subalignments","*"))
+    b = glob(joinpath(workingdir, "subalignments", "*"))
     sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
     context = AlnContext(workingdir, b)
     labels, adj = read_graph(get_graph_path(context))
@@ -80,7 +81,7 @@ end
 
 function test_rwr()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
-    b = glob(joinpath(workingdir, "subalignments","*"))
+    b = glob(joinpath(workingdir, "subalignments", "*"))
     sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
     context = AlnContext(workingdir, b)
     labels, adj = read_graph(get_graph_path(context))
@@ -98,18 +99,18 @@ end
 
 function find_decompositions()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
-    b = glob(joinpath(workingdir, "subalignments","*"))
+    b = glob(joinpath(workingdir, "subalignments", "*"))
     sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
     context = AlnContext(workingdir, b)
     labels, adj = read_graph(get_graph_path(context))
     g = AlnGraph(context)
-    cc = [(length(e.rows), length(e.nodes)) for e = connected_components(labels, adj, g)]
+    cc = [(length(e.rows), length(e.nodes)) for e in connected_components(labels, adj, g)]
     println(cc)
 end
 
 function main_task()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
-    b = glob(joinpath(workingdir, "subalignments","*"))
+    b = glob(joinpath(workingdir, "subalignments", "*"))
     sort!(b; by = x -> parse(Int, split(splitext(basename(x))[1], "_")[end]))
     context = AlnContext(workingdir, b)
     g = AlnGraph(context)

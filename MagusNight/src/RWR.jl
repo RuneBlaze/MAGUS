@@ -3,14 +3,14 @@ using SparseArrays
 using LinearAlgebra
 # using LowRankApprox
 
-function rwr_matrix_for(cc_ :: Set{Int}, digraph :: Dict{Int, Dict{Int, Float64}})
+function rwr_matrix_for(cc_::Set{Int}, digraph::Dict{Int,Dict{Int,Float64}})
     cc = collect(cc_)
     N = length(cc)
     ele2node = Vector{Int}(undef, length(cc))
     for i = 1:N
         ele2node[i] = cc[i]
     end
-    node2ele = Dict{Int, Int}()
+    node2ele = Dict{Int,Int}()
     for i = 1:N
         node2ele[ele2node[i]] = i
     end
@@ -20,12 +20,12 @@ function rwr_matrix_for(cc_ :: Set{Int}, digraph :: Dict{Int, Dict{Int, Float64}
     J = Int[]
     V = Float32[]
     cnt = length(digraph)
-    for (u, adj) = digraph
+    for (u, adj) in digraph
         cnt -= 1
         if u ∉ cc_
             continue
         end
-        for (v, w) = adj
+        for (v, w) in adj
             if v ∉ cc_
                 continue
             end
@@ -43,7 +43,7 @@ function rwr_matrix_for(cc_ :: Set{Int}, digraph :: Dict{Int, Dict{Int, Float64}
     return (A = A, forward = node2ele, backward = ele2node)
 end
 
-function rwr(s :: Int, A; delta = 0.5, max_iters = 10000)
+function rwr(s::Int, A; delta = 0.5, max_iters = 10000)
     N = size(A)[1]
     e = zeros(Float32, N)
     e[s] = 1
@@ -81,10 +81,14 @@ function rwr_allpairs(A; delta = 0.5, max_iters = 10)
     return r + transpose(r)
 end
 
-function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{Int, Float64}}, alngraph :: AlnGraph)
-    newgraph = Dict{Int, Dict{Int, Float64}}()
+function rwr_normalize_graph(
+    labels::Vector{Int},
+    digraph::Dict{Int,Dict{Int,Float64}},
+    alngraph::AlnGraph,
+)
+    newgraph = Dict{Int,Dict{Int,Float64}}()
     ccs = connected_components(labels, digraph, alngraph)
-    for (cc_ix, cc_) = enumerate(ccs)
+    for (cc_ix, cc_) in enumerate(ccs)
         println("dealing with new connected component $cc_ix out of $(length(ccs))")
         cc = cc_.nodes
         cc_iter = collect(cc)
@@ -97,7 +101,7 @@ function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{In
         R = zeros(Float32, N, N)
         forward = rwr_setup.forward
         backward = rwr_setup.backward
-        for (cnt, i) = enumerate(cc_iter)
+        for (cnt, i) in enumerate(cc_iter)
             # @show cnt, N
             if cnt % 2000 == 0
                 println("Progress: $cnt out of $N, roughly $(round(cnt / N * 100))%")
@@ -107,10 +111,10 @@ function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{In
         end
         R += transpose(R)
         max_r = maximum(R)
-        partial_graph = Dict{Int, BinaryMaxHeap{Tuple{Float32, Int}}}()
-        for u = cc_iter
-            partial_graph[u] = BinaryMaxHeap{Tuple{Float32, Int}}()
-            newgraph[u] = Dict{Int, Float64}()
+        partial_graph = Dict{Int,BinaryMaxHeap{Tuple{Float32,Int}}}()
+        for u in cc_iter
+            partial_graph[u] = BinaryMaxHeap{Tuple{Float32,Int}}()
+            newgraph[u] = Dict{Int,Float64}()
         end
         for i = 1:N
             u = cc_iter[i]
@@ -123,8 +127,8 @@ function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{In
 
         max_w = 0
         degs = counter(Int)
-        for (u, adj) = digraph
-            for (v, w) = adj
+        for (u, adj) in digraph
+            for (v, w) in adj
                 degs[v] += 1
                 degs[u] += 1
                 max_w = max(max_w, w)
@@ -133,9 +137,9 @@ function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{In
 
         @inline reorder(x, y) = x < y ? (x, y) : (y, x)
 
-        for u = cc_iter
+        for u in cc_iter
             cnt = 0
-            while cnt < degs[u] * 2 &&! isempty(partial_graph[u])
+            while cnt < degs[u] * 2 && !isempty(partial_graph[u])
                 (w, v) = pop!(partial_graph[u])
                 x, y = reorder(u, v)
                 newgraph[x][y] = w / max_r * max_w
@@ -146,9 +150,9 @@ function rwr_normalize_graph(labels :: Vector{Int}, digraph :: Dict{Int, Dict{In
     return newgraph
 end
 
-function dump_graph_to_file(io, dict :: Dict{Int, Dict{Int, Float64}})
-    for (u, adj) = dict
-        for (v, w) = adj
+function dump_graph_to_file(io, dict::Dict{Int,Dict{Int,Float64}})
+    for (u, adj) in dict
+        for (v, w) in adj
             println(io, "$u $v $w")
         end
     end
@@ -157,7 +161,7 @@ end
 function elementary_digraph_stats(labels, digraph)
     num_nodes = length(labels)
     num_edges = 0
-    for (k, v) = digraph
+    for (k, v) in digraph
         num_edges += length(v)
     end
     return (num_nodes, num_edges)

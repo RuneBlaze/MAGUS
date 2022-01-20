@@ -1,6 +1,6 @@
 using Base.Filesystem
 function apply_transformation(c, trans)
-    if trans == "rwr" 
+    if trans == "rwr"
         outf = joinpath(dirname(c.graph.graphPath), "graph_rwr.txt")
         if isfile(outf)
             return outf
