@@ -28,7 +28,6 @@ def clusterGraph(graph):
         
     elif Configs.graphClusterMethod == "mcl":
         runMclClustering(graph)
-
     elif Configs.graphClusterMethod == "upgma":
         from align.merge.magus_night import MagusNight
         # # FIXME: duplicate code!
@@ -40,11 +39,11 @@ def clusterGraph(graph):
         # jl.eval(f'push!(LOAD_PATH, "{p}")') 
         # from julia import MagusNight
         upgma_config = MagusNight.ClusteringConfig(True, Configs.upgmaKeepOrder, Configs.upgmaZeroWeight)
-        Configs.log(f"Running UPGMA clustering with configuration: {upgma_config}")
+        Configs.log(f"Running UPGMA clustering/tracing with configuration: {upgma_config}")
         r = MagusNight.find_clusters(graph.context, config = upgma_config)
         graph.clusters = [list(e) for e in r]
         graph.writeClustersToFile(graph.clusterPath)
-        
+        graph.writeClustersToFile(graph.tracePath)
     elif Configs.graphClusterMethod == "mlrmcl":
         runMlrMclClustering(graph)
         

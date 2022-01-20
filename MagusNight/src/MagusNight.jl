@@ -82,7 +82,7 @@ function get_graph_path(context :: AlnContext)
     return gp
 end
 
-function AlnGraph(context :: AlnContext; ghostrun = false)
+function AlnGraph(context :: AlnContext; ghostrun = false, read_trace = false)
     wp = joinpath(context.workingdir, "graph")
     gp = joinpath(wp, "graph.txt")
     cp = joinpath(wp, "clusters.txt")
@@ -131,7 +131,7 @@ function AlnGraph(context :: AlnContext; ghostrun = false)
             matrix[a+1][b+1] = c
         end
 
-        for line in eachline(cp)
+        for line in eachline(read_trace ? tp : cp)
             tokens = [parse(Int, token) + 1 for token in split(strip(line))]
             if length(tokens) > 1
                 push!(clusters, tokens)
@@ -565,4 +565,5 @@ export fast_upgma
 export find_clusters, upgma_naive_clustering
 export rwr_normalize_graph, elementary_digraph_stats, dump_graph_to_file
 export apply_transformation
+export debug_print_mapped_graph
 end
