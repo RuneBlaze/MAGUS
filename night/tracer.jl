@@ -4,8 +4,6 @@ using MagusNight
 using Glob
 using Profile
 using BenchmarkTools
-# using Traceur
-# using ProfileView
 
 function run_benchmark()
     workingdir = "../../Downloads/sandia_data/magus10krun_norecurse/"
@@ -122,7 +120,7 @@ end
 
 # b = @profile begin
 # find_fast_clusterings()
-test_rwr()
+# test_rwr()
 # println("hello")
 # s = readline()
 find_fast_clusterings()

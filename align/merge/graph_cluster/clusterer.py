@@ -30,15 +30,7 @@ def clusterGraph(graph):
         runMclClustering(graph)
     elif Configs.graphClusterMethod == "upgma":
         from align.merge.magus_night import MagusNight
-        # # FIXME: duplicate code!
-        # from sys import path
-        # from os.path import join
-        # from julia import Julia
-        # jl = Julia()
-        # p = join(path[0], 'MagusNight')
-        # jl.eval(f'push!(LOAD_PATH, "{p}")') 
-        # from julia import MagusNight
-        upgma_config = MagusNight.ClusteringConfig(True, Configs.upgmaKeepOrder, Configs.upgmaZeroWeight)
+        upgma_config = MagusNight.ClusteringConfig(True, Configs.upgmaKeepOrder, Configs.upgmaZeroWeight, Configs.exp)
         Configs.log(f"Running UPGMA clustering/tracing with configuration: {upgma_config}")
         r = MagusNight.find_clusters(graph.context, config = upgma_config)
         graph.clusters = [list(e) for e in r]

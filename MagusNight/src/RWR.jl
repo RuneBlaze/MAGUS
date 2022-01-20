@@ -1,7 +1,6 @@
 # random walk with restart
 using SparseArrays
 using LinearAlgebra
-# using LowRankApprox
 
 function rwr_matrix_for(cc_::Set{Int}, digraph::Dict{Int,Dict{Int,Float64}})
     cc = collect(cc_)
@@ -15,7 +14,6 @@ function rwr_matrix_for(cc_::Set{Int}, digraph::Dict{Int,Dict{Int,Float64}})
         node2ele[ele2node[i]] = i
     end
 
-    # A = zeros(Float32, N, N)
     I = Int[]
     J = Int[]
     V = Float32[]
@@ -55,30 +53,7 @@ function rwr(s::Int, A; delta = 0.5, max_iters = 10000)
         end
         r = rn
     end
-    # r[s] = 0
-    # r /= sum(r)
     return r
-end
-
-function rwr_allpairs(A; delta = 0.5, max_iters = 10)
-    set_zero_subnormals(true)
-    # A = sparse(A)
-    # println("computed into sparse matrix")
-    N = size(A)[1]
-    e = I
-    r = I
-    for i = 1:max_iters
-        r = delta * A * r + (1 - delta) * e
-        # if norm(rn - r) < 1e-6
-        #     println("converged in ", i, " iterations")
-        #     break
-        # end
-
-        # if i % 5 == 0
-        println("iteration ", i)
-        # end
-    end
-    return r + transpose(r)
 end
 
 function rwr_normalize_graph(
@@ -102,7 +77,6 @@ function rwr_normalize_graph(
         forward = rwr_setup.forward
         backward = rwr_setup.backward
         for (cnt, i) in enumerate(cc_iter)
-            # @show cnt, N
             if cnt % 2000 == 0
                 println("Progress: $cnt out of $N, roughly $(round(cnt / N * 100))%")
             end

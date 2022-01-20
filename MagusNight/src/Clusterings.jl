@@ -109,8 +109,6 @@ function disjoint_set_partial_order_exists(
     mid::Int,
     mid_visited::BitVector,
 )
-    # assumption: u and v are current clusters -- they are roots of disjoint sets
-    # @inline redirect(x :: Int) = x
     if v ∈ outedges[u] && u ∈ outedges[v]
         return false
     end
@@ -136,8 +134,6 @@ function disjoint_set_partial_order_exists(
         end
     end
 
-    mid_visited = visited
-    visited = BitVector(undef, length(outedges))
     return true
 end
 
@@ -247,6 +243,20 @@ function fast_upgma(
     absorbed = falses(N)
     invalidated = Set{Tuple{Int,Int}}()
     mid = -1
+
+    @inline isforbidden(l, r) = !isempty(rows[l] ∩ rows[r]) || !disjoint_set_partial_order_exists(
+            visited,
+            order_outedges,
+            l,
+            r,
+            mid,
+            mid_visited,
+        )
+    @inline function forbid(l, r)
+        delete!(weight_map[l], r)
+        delete!(weight_map[r], l)
+        push!(invalidated, (l, r))
+    end
     while !isempty(pq)
         v, l, r = pop!(pq)
         l, r = mkpair(l, r)
@@ -258,25 +268,35 @@ function fast_upgma(
             continue
         end
 
-        if !isempty(rows[l] ∩ rows[r]) ||
-           !disjoint_set_partial_order_exists(
-            visited,
-            order_outedges,
-            l,
-            r,
-            mid,
-            mid_visited,
-        )
-            delete!(weight_map[l], r)
-            delete!(weight_map[r], l)
-            push!(invalidated, (l, r))
+        if isforbidden(l, r)
+            forbid(l, r)
             continue
         end
 
+        mid_visited = visited
+        visited = BitVector(undef, N)
         # now we merge l and r
         n = root_union!(clusters, l, r)
         m = l == n ? r : l # m is the cluster being merged
         absorbed[m] = true
+
+        if config.clean_forbidden
+            # filter out edges that are no longer valid
+            for c = keys(weight_map[l])
+                _1, _2 = mkpair(l, c)
+                if isforbidden(_1, _2)
+                    forbid(_1, _2)
+                end
+            end
+            for c = keys(weight_map[r])
+                _1, _2 = mkpair(r, c)
+                if isforbidden(_1, _2)
+                    forbid(_1, _2)
+                end
+            end
+        end
+
+        # perform contraction
         union!(order_outedges[n], order_outedges[m])
         union!(order_inedges[n], order_inedges[m])
         for innode in order_inedges[m]
