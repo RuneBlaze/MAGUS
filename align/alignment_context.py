@@ -41,6 +41,7 @@ class AlignmentContext:
         self.subalignmentTasks = []
         self.backboneTasks = []
         self.graph = None
+        self.configs = Configs
         
         for attr in kwargs:
             vars(self)[attr] = kwargs.get(attr)

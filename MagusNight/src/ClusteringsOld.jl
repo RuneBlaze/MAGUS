@@ -439,24 +439,6 @@ function upgma(
     return upgma_step2(tree, pq; config = config)
 end
 
-function read_graph(io)
-    @inline reorder(x, y) = x < y ? (x, y) : (y, x)
-    graph = Dict{Int,Dict{Int,Float64}}()
-    labels = Set{Int}()
-    for line in eachline(io)
-        _1, _2, _3 = [n for n in split(strip(line))]
-        a_, b_, w = parse(Int, _1), parse(Int, _2), parse(Float64, _3)
-        a, b = reorder(a_, b_)
-        if !haskey(graph, a)
-            graph[a] = Dict()
-        end
-        push!(labels, a)
-        push!(labels, b)
-        graph[a][b] = w
-    end
-    return collect(labels), graph
-end
-
 function upgma_step2(
     tree::Node,
     pq::PriorityQueue{Tuple{Node,Node},Float64};

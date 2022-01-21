@@ -28,6 +28,52 @@ struct ClusteringConfig
     ClusteringConfig(a = true, b = true, c = false, d = false) = new(a, b, c, d)
 end
 
+function read_graph(io)
+    @inline reorder(x, y) = x < y ? (x, y) : (y, x)
+    graph = Dict{Int,Dict{Int,Float64}}()
+    labels = Set{Int}()
+    for line in eachline(io)
+        _1, _2, _3 = [n for n in split(strip(line))]
+        a_, b_, w = parse(Int, _1), parse(Int, _2), parse(Float64, _3)
+        a, b = reorder(a_, b_)
+        if !haskey(graph, a)
+            graph[a] = Dict()
+        end
+        push!(labels, a)
+        push!(labels, b)
+        graph[a][b] = w
+    end
+    return collect(labels), graph
+end
+
+function symmetrize!(g)
+    for (u, adj) = g
+        for (v, w) = adj
+            if !haskey(g, v)
+                g[v] = Dict{Int, eltype(w)}()
+            end
+            g[v][u] = w
+        end
+    end
+end
+
+function desymmetrize(g)
+    newgraph = Dict{Int,Dict{Int,Float64}}()
+    for (u, adj) = g
+        for (v, w) = adj
+            if u > v
+                continue
+            end
+            if !haskey(g, u)
+                g[u] = Dict{Int, eltype(w)}()
+            end
+            g[u][v] = w
+        end
+    end
+    return newgraph
+end
+
+
 include("ClusteringsOld.jl")
 
 function connected_components(

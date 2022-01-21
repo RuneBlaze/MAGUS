@@ -139,6 +139,7 @@ def parseArgs():
     parser.add_argument("--zeroWeight", action="store_true", help="use zero-averaged weight in the UPGMA clustering step")
     parser.add_argument("--exp", action="store_true", help="enable experimental features")
     parser.add_argument("--transform", type=str, help="transform the alignment before clustering: available methods -- rwr",required=False)
+    parser.add_argument("--reweightits", type = int, help="reweight the alignment using the given number of MCL iterations", default = 2)
     return parser.parse_args()
 
 if __name__ == '__main__':

@@ -161,6 +161,7 @@ def buildConfigs(args):
     Configs.mafftRuns = args.mafftruns
     Configs.mafftSize = args.mafftsize
     Configs.mclInflationFactor = args.inflationfactor
+    Configs.mclReweightIts = args.reweightits
     
     Configs.constrain = args.constrain.lower() == "true"
     Configs.onlyGuideTree = args.onlyguidetree.lower() == "true"

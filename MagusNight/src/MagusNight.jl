@@ -4,7 +4,7 @@ using SparseArrays
 using Base.Filesystem
 using DataStructures
 include("Clusterings.jl")
-include("RWR.jl")
+
 include("Filtering.jl")
 
 mutable struct AlnContext
@@ -131,7 +131,6 @@ function AlnGraph(context::AlnContext; ghostrun = false, read_trace = false)
     matrix = Vector{TDict{Int,Int}}(undef, size)
     clusters = Vector{Vector{Int}}()
     if !ghostrun
-
         for i = 1:size
             matrix[i] = TDict{Int,Int}()
         end
