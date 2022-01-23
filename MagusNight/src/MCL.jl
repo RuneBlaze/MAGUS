@@ -1,3 +1,4 @@
+using UUIDs
 function mcl_filter(digraph :: Dict{Int, Dict{Int, Float64}}, context; inflation = 1.4)
     config = context.configs
     mcl_path = config.mclPath
@@ -39,9 +40,10 @@ function mcl_weight_replacement(context;
     mcl_path = config.mclPath
     gp = context.graph.graphPath
     op = "$gp.mcl_filter"
+    stem = "$(uuid4())"
     # @show `$mcl_path $gp --abc -I $inflation -o $op -dump-interval $(it):$(it+1) -dump linesite`
-    run(`$mcl_path $gp --abc -I $inflation --d -dump-stem dump -o $op -dump-interval $(it):$(it+1) -dump linesite`)
-    graph_file = "ite-$it.dump"
+    run(`$mcl_path $gp --abc -I $inflation --d -dump-stem $stem -o $op -dump-interval $(it):$(it+1) -dump linesite`)
+    graph_file = "ite-$it.$stem"
     labels, new_graph = read_graph(graph_file)
     return new_graph
 end

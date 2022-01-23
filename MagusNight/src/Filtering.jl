@@ -17,7 +17,7 @@ function apply_transformation(c, trans)
         labels, adj = read_graph(c.graph.graphPath)
         newgraph = mcl_filter(adj, c; inflation = configs.mclInflationFactor)
     elseif trans == "mcl_reweight"
-        configs.log("mcl_filter will be run with I = $(configs.mclInflationFactor) and its = $(configs.mclReweightIts)")
+        configs.log("mcl_reweight will be run with I = $(configs.mclInflationFactor) and its = $(configs.mclReweightIts)")
         newgraph = mcl_weight_replacement(c; inflation = configs.mclInflationFactor, iterations = configs.mclReweightIts)
     else
         error("Unknown transformation: " * trans)
