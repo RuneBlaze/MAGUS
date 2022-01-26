@@ -84,7 +84,7 @@ def parseArgs():
                         required=False, default=None)
     
     parser.add_argument("--graphbuildmethod", type=str,
-                        help="Method for building the alignment graph (mafft, mafftmerge, or initial)",
+                        help="Method for building the alignment graph (only mafft currently supported)",
                         required=False, default="mafft")
     
     parser.add_argument("--graphbuildrestrict", type=str,
@@ -94,6 +94,10 @@ def parseArgs():
     parser.add_argument("--graphbuildhmmextend", type=str,
                         help="Extend the alignment graph MAFFT backbones with hmmer (true or false)",
                         required=False, default="False")
+    
+    parser.add_argument("--graphbuildstrategy", type=str,
+                        help="Strategy for choosing backbone sequences (random, longest, longestrandom, coverage)",
+                        required=False, default="random")
     
     parser.add_argument("--graphclustermethod", type=str,
                         help="Method for initial clustering of the alignment graph (mcl or none)",
@@ -129,17 +133,23 @@ def parseArgs():
                         help="If recursing, passes this argument as the guide tree option to the lower levels. (Default fasttree)", required=False, default="fasttree")
     
     parser.add_argument("--recursethreshold", type=int,
-                        help="MAGUS will recursively align subsets above this threshold size", required=False, default=200)
+                        help="MAGUS will recursively align subsets above this threshold size", required=False, default=500)
     
     parser.add_argument("--alignsizelimit", type=float,
                         help="Size threshold for alignment compression (in GB)", required=False, default=100)
     
+<<<<<<< HEAD
     parser.add_argument("-j", "--julia", action="store_true", help="use Julia to speed-up the trace-finding process")
     parser.add_argument("--keepOrder", action="store_false", help="during the UPGMA clustering, ensure that clusters have valid order")
     parser.add_argument("--zeroWeight", action="store_true", help="use zero-averaged weight in the UPGMA clustering step")
     parser.add_argument("--exp", action="store_true", help="enable experimental features")
     parser.add_argument("--transform", type=str, help="transform the alignment before clustering: available methods -- rwr",required=False)
     parser.add_argument("--reweightits", type = int, help="reweight the alignment using the given number of MCL iterations", default = 2)
+=======
+    parser.add_argument("--allowlossycompression", type=str,
+                        help="Allow lossy alignment compression above the size limit (true or false)", required=False, default="true")
+       
+>>>>>>> origin/backbones
     return parser.parse_args()
 
 if __name__ == '__main__':

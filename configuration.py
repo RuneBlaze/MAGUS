@@ -36,6 +36,8 @@ class Configs:
     graphBuildHmmExtend = False
     graphBuildRestrict = False
     graphTransformMethod = None
+    graphBuildStrategy = "random"
+    
     graphClusterMethod = "mcl" 
     graphTraceMethod = "minclusters"
     graphTraceOptimize = False
@@ -71,6 +73,7 @@ class Configs:
     numCores = 1
     searchHeapLimit = 5000
     alignmentSizeLimit = 100
+    allowLossyCompression = True
     
     @staticmethod
     def log(msg, path = None):
@@ -154,6 +157,7 @@ def buildConfigs(args):
     Configs.graphBuildHmmExtend = args.graphbuildhmmextend.lower() == "true"
     # print(Configs.graphBuildHmmExtend)
     Configs.graphBuildRestrict = args.graphbuildrestrict.lower() == "true"
+    Configs.graphBuildStrategy = args.graphbuildstrategy
     Configs.graphClusterMethod = args.graphclustermethod
     Configs.graphTraceMethod = args.graphtracemethod
     Configs.graphTraceOptimize = args.graphtraceoptimize.lower() == "true"
@@ -180,3 +184,4 @@ def buildConfigs(args):
     Configs.graphTransformMethod = args.transform
     
     Configs.alignmentSizeLimit = args.alignsizelimit
+    Configs.allowLossyCompression = args.allowlossycompression.lower() == "true"
