@@ -138,18 +138,15 @@ def parseArgs():
     parser.add_argument("--alignsizelimit", type=float,
                         help="Size threshold for alignment compression (in GB)", required=False, default=100)
     
-<<<<<<< HEAD
     parser.add_argument("-j", "--julia", action="store_true", help="use Julia to speed-up the trace-finding process")
     parser.add_argument("--keepOrder", action="store_false", help="during the UPGMA clustering, ensure that clusters have valid order")
     parser.add_argument("--zeroWeight", action="store_true", help="use zero-averaged weight in the UPGMA clustering step")
     parser.add_argument("--exp", action="store_true", help="enable experimental features")
     parser.add_argument("--transform", type=str, help="transform the alignment before clustering: available methods -- rwr",required=False)
     parser.add_argument("--reweightits", type = int, help="reweight the alignment using the given number of MCL iterations", default = 2)
-=======
     parser.add_argument("--allowlossycompression", type=str,
                         help="Allow lossy alignment compression above the size limit (true or false)", required=False, default="true")
        
->>>>>>> origin/backbones
     return parser.parse_args()
 
 if __name__ == '__main__':
