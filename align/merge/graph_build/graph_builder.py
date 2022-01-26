@@ -67,6 +67,7 @@ def requestBackboneTasks(context):
     
     else:
         Configs.log("Using {} MAFFT backbones..".format(Configs.mafftRuns)) 
+        Configs.log(f"The graph build strategy is {Configs.graphBuildStrategy}")
         backbones.requestMafftBackbones(context)
     
     if not Configs.constrain and Configs.graphBuildMethod != "subsethmm":

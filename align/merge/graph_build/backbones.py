@@ -28,7 +28,6 @@ def requestMafftBackbones(context):
             
         if Configs.graphBuildHmmExtend:
             context.backboneExtend.add(alignedFile)
-
     assignBackboneTaxa(context, missingBackboneFiles)
     for unalignedFile, alignedFile in missingBackboneFiles.items():
         backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile)
