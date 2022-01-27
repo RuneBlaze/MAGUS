@@ -46,6 +46,11 @@ def buildInitialTree(context, workingDir, treeType):
         alignPath = os.path.join(tempDir, "initial_align.txt")
         buildInitialAlignment(context.unalignedSequences, tempDir, Configs.decompositionSkeletonSize, None, alignPath)
         external_tools.runFastTree(alignPath, tempDir, outputTreePath, "noml").run()
+    elif treeType.lower() == "raxml":
+        Configs.log("Building RAxML initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
+        alignPath = os.path.join(tempDir, "initial_align.txt")
+        buildInitialAlignment(context.unalignedSequences, tempDir, Configs.decompositionSkeletonSize, None, alignPath)
+        external_tools.runRaxmlNg(alignPath, tempDir, outputTreePath, Configs.numCores).run()
     elif treeType.lower() == "parttree":
         Configs.log("Building MAFFT PartTree initial tree on {}..".format(context.sequencesPath))
         taxa = list(context.unalignedSequences.keys())

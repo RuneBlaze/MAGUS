@@ -107,7 +107,7 @@ def runFastTree(fastaFilePath, workingDir, outputPath, mode = "normal", intree =
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
-def runRaxmlNg(fastaFilePath, workingDir, outputPath, threads = 8):
+def runRaxmlNg(fastaFilePath, workingDir, outputPath, threads = Configs.numCores):
     # raxml-ng --msa prim.phy --model GTR+G --prefix T4 --threads 2 --seed 2 --tree pars{25},rand{25}
     baseName = os.path.basename(outputPath).replace(".","")
     raxmlFile = os.path.join(workingDir, "{}.raxml.bestTree".format(baseName))

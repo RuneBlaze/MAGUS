@@ -178,3 +178,5 @@ Manifest.toml
 
 scratch/
 .DS_Store
+
+.vscode/
