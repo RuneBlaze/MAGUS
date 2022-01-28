@@ -24,8 +24,9 @@ struct ClusteringConfig
     ensure_order::Bool
     zero_weight::Bool
     clean_forbidden::Bool
+    rg_fast :: Bool
 
-    ClusteringConfig(a = true, b = true, c = false, d = false) = new(a, b, c, d)
+    ClusteringConfig(a = true, b = true, c = false, d = false, e = false) = new(a, b, c, d, e)
 end
 
 function read_graph(io)
@@ -364,7 +365,9 @@ function fast_upgma(
         for c in keys(weight_map[l]) ∪ keys(weight_map[r])
             # our job is to assign weight_map[c][n].
             # we should be able to do this in-place
-            if config.zero_weight
+            if config.rg_fast
+                weight_map[n][c] = get(weight_map[l], c, 0) + get(weight_map[r], c, 0)
+            elseif config.zero_weight
                 weight_map[n][c] =
                     (
                         get(weight_map[l], c, 0) * clustersizes[l] +

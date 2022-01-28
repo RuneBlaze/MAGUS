@@ -127,7 +127,11 @@ end
 function dump_graph_to_file(io, dict::Dict{Int,Dict{Int,Float64}})
     for (u, adj) in dict
         for (v, w) in adj
-            println(io, "$u $v $w")
+            if w == round(w)
+                println(io, "$u $v $(Int(w))")
+            else
+                println(io, "$u $v $w")
+            end
         end
     end
 end

@@ -13,6 +13,7 @@ def transformGraph(graph):
         Configs.log(f"Applying {method} transformation...")
         ngraph_path = MagusNight.apply_transformation(graph.context, method)
         graph.graphPath = ngraph_path
+        graph.readGraphFromFile(ngraph_path)
     # elif method == "rwr":
     #     Configs.log("Applying RWR transformation..")
     #     ngraph_path = rwrTransform(graph)

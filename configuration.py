@@ -181,6 +181,7 @@ def buildConfigs(args):
     Configs.upgmaKeepOrder = args.keepOrder
     Configs.upgmaZeroWeight = args.zeroWeight
     Configs.exp = args.exp
+    # Configs.upgmaNoNormalize = args.noNormalize
     Configs.graphTransformMethod = args.transform
     
     Configs.alignmentSizeLimit = args.alignsizelimit

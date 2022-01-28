@@ -30,7 +30,7 @@ def clusterGraph(graph):
         runMclClustering(graph)
     elif Configs.graphClusterMethod == "upgma":
         from align.merge.magus_night import MagusNight
-        upgma_config = MagusNight.ClusteringConfig(True, Configs.upgmaKeepOrder, Configs.upgmaZeroWeight, Configs.exp)
+        upgma_config = MagusNight.ClusteringConfig(True, Configs.upgmaKeepOrder, Configs.upgmaZeroWeight, False, Configs.exp)
         Configs.log(f"Running UPGMA clustering/tracing with configuration: {upgma_config}")
         r = MagusNight.find_clusters(graph.context, config = upgma_config)
         graph.clusters = [list(e) for e in r]
