@@ -128,7 +128,12 @@ def buildConfigs(args):
             for filename in os.listdir(path):
                 Configs.subalignmentPaths.append(os.path.join(path, filename))
         else:
-            Configs.subalignmentPaths.append(path)
+            with open(path) as fh:
+                l = fh.readline()
+            if ">" not in l and "#" not in l:
+                Configs.subalignmentPaths += l.split()
+            else:
+                Configs.subalignmentPaths.append(path)
     
     Configs.backbonePaths = []
     for p in args.backbones:
