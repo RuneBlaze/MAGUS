@@ -120,7 +120,7 @@ def decomposeTree(tree, maxSubsetSize, numSubsets):
     trees = [tree]
     if Configs.emulatePasta:
         maxSubsetSize = 200
-        numSubsets = None
+        numSubsets = 1231231234
     while len(trees) < numSubsets:
         largestTree = max(trees, key=lambda t : t.childs)
         
