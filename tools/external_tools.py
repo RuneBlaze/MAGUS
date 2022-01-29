@@ -89,7 +89,10 @@ def runFastTree(fastaFilePath, workingDir, outputPath, mode = "normal", intree =
     
     args = [Configs.fasttreePath]
     if Configs.inferDataType(fastaFilePath) == "protein":
-        args.extend(["-lg"])
+        if Configs.emulatePasta:
+            args.extend(["-wag", "-gamma"])
+        else:
+            args.extend(["-lg"])
     else:
         args.extend(["-nt", "-gtr"])
     

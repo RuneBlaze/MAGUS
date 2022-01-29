@@ -118,6 +118,9 @@ def decomposeGuideTree(subsetsDir, sequencesPath, guideTreePath, maxSubsetSize, 
 
 def decomposeTree(tree, maxSubsetSize, numSubsets):
     trees = [tree]
+    if Configs.emulatePasta:
+        maxSubsetSize = 200
+        numSubsets = None
     while len(trees) < numSubsets:
         largestTree = max(trees, key=lambda t : t.childs)
         

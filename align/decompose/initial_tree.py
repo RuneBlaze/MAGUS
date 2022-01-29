@@ -78,8 +78,10 @@ def buildInitialAlignment(sequences, tempDir, skeletonSize, initialAlignSize, ou
     
     if initialAlignSize is None or initialAlignSize > len(sequences):
         initialAlignSize = len(sequences)
-    
-    skeletonTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize)
+    if Configs.emulatePasta:
+        skeletonTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize, mode="random")
+    else:
+        skeletonTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize)
     additional = initialAlignSize-skeletonSize
     random.shuffle(remainingTaxa)
     remainingTaxa, unusedTaxa = remainingTaxa[:additional], remainingTaxa[additional:]

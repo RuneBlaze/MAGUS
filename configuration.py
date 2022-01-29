@@ -55,6 +55,7 @@ class Configs:
     recurse = True
     recurseGuideTree = "fasttree"
     recurseThreshold = 200
+    emulatePasta = False
     
     clustalPath = relative_to_me("tools/clustal/clustalo")
     mafftPath = which("mafft") or relative_to_me("tools/mafft/mafft")
@@ -188,6 +189,12 @@ def buildConfigs(args):
     Configs.exp = args.exp
     # Configs.upgmaNoNormalize = args.noNormalize
     Configs.graphTransformMethod = args.transform
+
+    Configs.emulatePasta = args.p0
+
+    if Configs.emulatePasta:
+        Configs.log("Emulating PASTA: decomposition strategy devised")
+        Configs.decompositionSkeletonSize = 100
     
     Configs.alignmentSizeLimit = args.alignsizelimit
     Configs.allowLossyCompression = args.allowlossycompression.lower() == "true"
