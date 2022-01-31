@@ -69,24 +69,36 @@ def buildDecomposition(context, subsetsDir):
 def pasta_shim(n):
     return n.replace("_","").replace("/","").replace("-","").lower()
 
+def guess_isfasta(p):
+    # check if p is a file and it has a '>' in its first line
+    if os.path.isfile(p):
+        with open(p, 'r') as f:
+            return f.readline().startswith('>')
+    else:
+        return False
+
 def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength"):
     allTaxa = list(sequences.keys())
 
     if Configs.skeletonSeqs:
-        Configs.log("Using provided skeleton sequences.. from {}".format(Configs.skeletonSeqs))
-        seqs = sequenceutils.readFromFasta(Configs.skeletonSeqs, removeDashes=True)
-        rawSeqs = set(seqs.keys())
-        skeletonTaxa = set([t for t in allTaxa if t in rawSeqs or pasta_shim(t) in rawSeqs])
-        assert skeletonTaxa.issubset(allTaxa)
-        assert len(skeletonTaxa) == len(rawSeqs)
-        return list(skeletonTaxa), list(set(allTaxa) - skeletonTaxa)
+        if guess_isfasta(Configs.skeletonSeqs):
+            Configs.log("Using provided skeleton sequences.. from {}".format(Configs.skeletonSeqs))
+            seqs = sequenceutils.readFromFasta(Configs.skeletonSeqs, removeDashes=True)
+            rawSeqs = set(seqs.keys())
+            skeletonTaxa = set([t for t in allTaxa if t in rawSeqs or pasta_shim(t) in rawSeqs])
+            assert skeletonTaxa.issubset(allTaxa)
+            assert len(skeletonTaxa) == len(rawSeqs)
+            return list(skeletonTaxa), list(set(allTaxa) - skeletonTaxa)
+        else:
+            mode = Configs.skeletonSeqs
+            Configs.log("Skeleton strategy: '{}'".format(mode))
     
-    if mode == "fulllength":
+    if mode == "fulllength" or mode == "median":
         seqLengths = [len(sequences[t].seq) for t in sequences]
-        
         #topQuartile = numpy.quantile(seqLengths, 0.75)
         seqLengths.sort()
-        topQuartile = seqLengths[int(0.75*(len(seqLengths)-1))]
+        threshold = 0.5 if mode == "median" else 0.75
+        topQuartile = seqLengths[int(threshold*(len(seqLengths)-1))]
         
         fullLength = []
         notFullLength = []
