@@ -188,6 +188,7 @@ def buildConfigs(args):
     Configs.upgmaZeroWeight = args.zeroWeight
     Configs.exp = args.exp
     Configs.randomSamples = args.randomSamples
+    Configs.skeletonSeqs = args.skeleton
     # Configs.upgmaNoNormalize = args.noNormalize
     Configs.graphTransformMethod = args.transform
 

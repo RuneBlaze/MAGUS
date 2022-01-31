@@ -68,6 +68,13 @@ def buildDecomposition(context, subsetsDir):
 
 def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength"):
     allTaxa = list(sequences.keys())
+
+    if Configs.skeletonSeqs:
+        Configs.log("Using provided skeleton sequences.. from {}".format(Configs.skeletonSeqs))
+        seqs = sequenceutils.readFromFasta(Configs.skeletonSeqs, removeDashes=True)
+        skeletonTaxa = set(seqs.keys())
+        assert skeletonTaxa.issubset(allTaxa)
+        return list(skeletonTaxa), list(set(allTaxa) - skeletonTaxa)
     
     if mode == "fulllength":
         seqLengths = [len(sequences[t].seq) for t in sequences]
