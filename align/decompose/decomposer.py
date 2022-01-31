@@ -66,14 +66,19 @@ def buildDecomposition(context, subsetsDir):
         context.subsetPaths = treeutils.decomposeGuideTree(subsetsDir, context.sequencesPath, guideTreePath, 
                                                    Configs.decompositionMaxSubsetSize, Configs.decompositionMaxNumSubsets)        
 
+def pasta_shim(n):
+    return n.replace("_","").replace("/","").replace("-","").lower()
+
 def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength"):
     allTaxa = list(sequences.keys())
 
     if Configs.skeletonSeqs:
         Configs.log("Using provided skeleton sequences.. from {}".format(Configs.skeletonSeqs))
         seqs = sequenceutils.readFromFasta(Configs.skeletonSeqs, removeDashes=True)
-        skeletonTaxa = set(seqs.keys())
+        rawSeqs = set(seqs.keys())
+        skeletonTaxa = set([t for t in allTaxa if t in rawSeqs or pasta_shim(t) in rawSeqs])
         assert skeletonTaxa.issubset(allTaxa)
+        assert len(skeletonTaxa) == len(rawSeqs)
         return list(skeletonTaxa), list(set(allTaxa) - skeletonTaxa)
     
     if mode == "fulllength":
