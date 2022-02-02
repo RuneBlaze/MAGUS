@@ -23,6 +23,12 @@ magus --p0 # use PASTA emulation
 magus --p0 --decompskeletonsize 300 # this is still overwritable. Other params are not
 ```
 
+## Cautionary Note
+
+This version of MAGUS, if detecting tools (say `FastTreeMP`) that are in your `$PATH`, will prefer
+the `$PATH`-installed first before falling back to the packaged ones. Change `PREFER_SELF_INSTALLED` to `False` in
+`configuration.py` if you want to disable this behavior.
+
 ## More clustering/tracing methods
 
 Using features below require a valid installation of Julia and [PyJulia](https://pyjulia.readthedocs.io/en/latest/index.html), which can be cumbersome to install.
@@ -33,7 +39,7 @@ Using features below require a valid installation of Julia and [PyJulia](https:/
 magus --graphclustermethod upgma
 ```
 
-`jminclusters` is a faster (up to 2x) version of `minclusters` for tracing, by virtue of Julia. It is useful mainly to speed up experiments.
+`jminclusters` is a faster (up to 2x) version of `minclusters` for tracing, by virtue of Julia. It is useful mainly to speed up experiments and be more concious of how Python can contribute to computing-power waste.
 
 ```bash
 magus --graphtracemethod jminclusters

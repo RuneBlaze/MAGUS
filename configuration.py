@@ -6,11 +6,22 @@ Created on Apr 14, 2020
 
 import os
 import time
+from sys import platform
 
 from helpers import sequenceutils
-from shutil import which
+from shutil import which as witch
+
+PREFER_SELF_INSTALLED = True
+
+def which(path):
+    if PREFER_SELF_INSTALLED:
+        return witch(path)
+    else:
+        return None
 
 def relative_to_me(path):
+    if platform == "darwin" or platform == "win32":
+        return None
     r = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
     assert os.path.isfile(r)
     return r
@@ -64,7 +75,7 @@ class Configs:
     hmmalignPath = which("hmmalign") or relative_to_me("tools/hmmer/hmmalign")
     hmmbuildPath = which("hmmbuild") or relative_to_me("tools/hmmer/hmmbuild")
     hmmsearchPath = which("hmmsearch") or relative_to_me("tools/hmmer/hmmsearch")
-    fasttreePath = which("FastTreeMP") or relative_to_me("tools/fasttree/FastTreeMP")
+    fasttreePath = which("FastTreeMP") or relative_to_me("tools/fasttree/FastTreeMP") or which("FastTree")
     raxmlPath = relative_to_me("tools/raxmlng/raxml-ng")
     
     logPath = None
