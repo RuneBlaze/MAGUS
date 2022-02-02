@@ -77,7 +77,7 @@ def parseArgs():
     
     parser.add_argument("--decompskeletonsize", type=int,
                         help="Number of skeleton sequences for the initial decomposition strategy",
-                        required=False, default=300)
+                        required=False)
     
     parser.add_argument("--datatype", type=str,
                         help="Data type (dna, rna, or protein). Will be inferred if not provided",
@@ -138,7 +138,7 @@ def parseArgs():
     parser.add_argument("--alignsizelimit", type=float,
                         help="Size threshold for alignment compression (in GB)", required=False, default=100)
     
-    parser.add_argument("-j", "--julia", action="store_true", help="use Julia to speed-up the trace-finding process")
+    # parser.add_argument("-j", "--julia", action="store_true", help="use Julia to speed-up the trace-finding process")
     parser.add_argument("--keepOrder", action="store_false", help="during the UPGMA clustering, ensure that clusters have valid order")
     parser.add_argument("--zeroWeight", action="store_true", help="use zero-averaged weight in the UPGMA clustering step")
     parser.add_argument("--exp", action="store_true", help="enable experimental features")
@@ -147,7 +147,6 @@ def parseArgs():
     parser.add_argument("--allowlossycompression", type=str,
                         help="Allow lossy alignment compression above the size limit (true or false)", required=False, default="true")
     parser.add_argument('--p0', action='store_true', help="emualte PASTA in the initial decomposition strategy")
-    parser.add_argument('--randomSamples', action='store_true')
     parser.add_argument("--skeleton", type=str, help="path to the skeleton file", required=False, default=None)
     return parser.parse_args()
 

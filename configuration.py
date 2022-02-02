@@ -42,7 +42,7 @@ class Configs:
     graphTraceMethod = "minclusters"
     graphTraceOptimize = False
 
-    useJulia = False
+    # useJulia = False
     
     mafftRuns = 10
     mafftSize = 200
@@ -156,7 +156,7 @@ def buildConfigs(args):
     Configs.decompositionMaxSubsetSize = args.maxsubsetsize
     Configs.decompositionMaxNumSubsets = args.maxnumsubsets
     Configs.decompositionStrategy = args.decompstrategy
-    Configs.decompositionSkeletonSize = args.decompskeletonsize
+    Configs.decompositionSkeletonSize = args.decompskeletonsize or 300
     Configs.dataType = args.datatype
     
     Configs.graphBuildMethod = args.graphbuildmethod
@@ -183,11 +183,11 @@ def buildConfigs(args):
     Configs.errorPath = os.path.join(Configs.workingDir, "log_errors.txt")
     Configs.debugPath = os.path.join(Configs.workingDir, "log_debug.txt")
 
-    Configs.useJulia = args.julia
+    # Configs.useJulia = args.julia
     Configs.upgmaKeepOrder = args.keepOrder
     Configs.upgmaZeroWeight = args.zeroWeight
     Configs.exp = args.exp
-    Configs.randomSamples = args.randomSamples
+    # Configs.randomSamples = args.randomSamples
     Configs.skeletonSeqs = args.skeleton
     # Configs.upgmaNoNormalize = args.noNormalize
     Configs.graphTransformMethod = args.transform
@@ -195,8 +195,9 @@ def buildConfigs(args):
     Configs.emulatePasta = args.p0
 
     if Configs.emulatePasta:
-        Configs.log("Emulating PASTA: decomposition strategy devised")
-        Configs.decompositionSkeletonSize = 100
+        Configs.log("Emulating PASTA: setting up PASTA-specific configs")
+        Configs.decompositionSkeletonSize = args.decompskeletonsize or 100
+        Configs.skeletonSeqs = "random"
     
     Configs.alignmentSizeLimit = args.alignsizelimit
     Configs.allowLossyCompression = args.allowlossycompression.lower() == "true"

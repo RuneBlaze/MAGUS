@@ -29,17 +29,9 @@ def findTrace(graph):
     if os.path.exists(graph.tracePath):
         Configs.log("Found existing trace file {}".format(graph.tracePath))
         graph.readClustersFromFile(graph.tracePath)
-        
     else:
-        if Configs.useJulia:
-            assert Configs.graphTraceMethod == "minclusters"
-            from sys import path
-            from os.path import join
-            from julia import Julia
-            jl = Julia()
-            p = join(path[0], 'MagusNight')
-            jl.eval(f'push!(LOAD_PATH, "{p}")')
-            from julia import MagusNight
+        if Configs.graphTraceMethod == "jminclusters":
+            from align.merge.magus_night import MagusNight
             results = MagusNight.find_trace(graph.context)
             clusters = []
             for c in results.clusters:
