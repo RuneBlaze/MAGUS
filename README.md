@@ -2,15 +2,42 @@
 Multiple Sequence Alignment using Graph Clustering
 
 This is a personal fork of the original version,
-with code-name `MagusNight`. There are several goals:
+with code-name `MagusNight`. Here are some of the extensions:
 
- - Parallelize the GCM A* trace-search process
-   - An experimental Julia rewrite has been done
-   - Maybe we should do some sort of any-time A*
-   - Some future plan is to change A* to HDA*
-- Swap out the clustering step of GCM
+## More customization
 
-The original description is below:
+`--skeleton` is now provided to specify a skeleton selection strategy. This can be paired with ``--decompskeletonsize``.
+
+```bash
+magus --skeleton fulllength # default strategy
+magus --skeleton median # 25% within median, like UPP
+magus --skeleton random # like PASTA
+magus --skeleton dir/skeleton.fa # the names of this FASTA file will be used
+```
+
+`--p0` is now provided as an emulation of PASTA decomposition within MAGUS. In addition to setting the
+skeleton params for you, it forces the FastTree2 parameters to be the same as PASTA in MAGUS.
+
+```bash
+magus --p0 # use PASTA emulation
+magus --p0 --decompskeletonsize 300 # this is still overwritable. Other params are not
+```
+
+## More clustering/tracing methods
+
+Using features below require a valid installation of Julia and [PyJulia](https://pyjulia.readthedocs.io/en/latest/index.html), which can be cumbersome to install.
+
+`upgma` is a new clustering method based on UPGMA.
+
+```bash
+magus --graphclustermethod upgma
+```
+
+`jminclusters` is a faster (up to 2x) version of `minclusters` for tracing, by virtue of Julia. It is useful mainly to speed up experiments.
+
+```bash
+magus --graphtracemethod jminclusters
+```
 
 - - - -
 
