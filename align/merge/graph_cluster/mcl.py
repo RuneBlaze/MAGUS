@@ -12,5 +12,3 @@ def runMclClustering(graph):
     Configs.log("Running MCL alignment graph clustering..")
     external_tools.runMcl(graph.graphPath, Configs.mclInflationFactor, graph.workingDir, graph.clusterPath).run()
     graph.readClustersFromFile(graph.clusterPath)
-    
-    
