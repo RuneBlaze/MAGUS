@@ -43,6 +43,9 @@ function main()
         if i < its_times # if we are not at the last iteration
             # we estimate the tree
             task = external_tools.runFastTree(output_filename, env_dir, output_treename, "fast")
+            taskArgs = task.taskArgs
+            taskArgs["workingDir"] = "."
+            task.taskArgs = taskArgs
             task.run()
         else
             # last iteration, move the output file to the output path
