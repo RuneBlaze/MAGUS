@@ -8,6 +8,7 @@ using Logging
 pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
 function main()
     external_tools = pyimport("tools.external_tools")
+    mask999 = pyimport("mask999")
     output_path = nothing
     output_ix = -1
     dir_ix = -1
@@ -42,7 +43,9 @@ function main()
         run(`magus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
         if i < its_times # if we are not at the last iteration
             # we estimate the tree
-            task = external_tools.runFastTree(output_filename, env_dir, output_treename, "fast")
+            @info "Compressing alignment: $(output_filename) -> $(output_treename).compressed"
+            mask999.compress_alignment(output_filename, output_filename * ".compressed")
+            task = external_tools.runFastTree(output_filename * ".compressed", env_dir, output_treename, "fast")
             taskArgs = task.taskArgs
             taskArgs["workingDir"] = "."
             task.taskArgs = taskArgs
