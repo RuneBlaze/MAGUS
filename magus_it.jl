@@ -5,7 +5,7 @@ exec julia --color=yes --startup-file=no "${BASH_SOURCE[0]}" "$@"
 using PyCall
 using Base.Filesystem
 using Logging
-pushfirst!(PyVector(pyimport("sys")["path"]), "")
+pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
 function main()
     external_tools = pyimport("tools.external_tools")
     output_path = nothing
