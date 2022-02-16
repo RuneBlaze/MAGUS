@@ -45,6 +45,20 @@ magus --graphclustermethod upgma
 magus --graphtracemethod jminclusters
 ```
 
+## Iteration
+
+PASTA's iteration protocol is now implemented in the script `magus_it.jl` (requires PyCall, or PyJulia).
+The usage is to append original arguments to `magus_it.jl` in addition to `--its x` where `x`
+is the number of iterations.
+
+```
+# Example, not representative of any actual run
+julia magus_it.jl --its 2 -i $input -r 5 -m 50 -o $output
+```
+
+Like PASTA, after each iteration, the tree estimated is based on a compressed version of the MSA, removing
+insertion-only or at least 99.9% gappy columns. MAGUS's lossy compression (described in recursive MAGUS) is not used.
+
 - - - -
 
 ## Purpose and Functionality
