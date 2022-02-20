@@ -86,6 +86,9 @@ class Configs:
     searchHeapLimit = 5000
     alignmentSizeLimit = 100
     allowLossyCompression = True
+
+    outputInitialAlignment = None
+    onlyInitialAln = False
     
     @staticmethod
     def log(msg, path = None):
@@ -212,3 +215,5 @@ def buildConfigs(args):
     
     Configs.alignmentSizeLimit = args.alignsizelimit
     Configs.allowLossyCompression = args.allowlossycompression.lower() == "true"
+    Configs.outputInitialAlignment = args.initialAln
+    Configs.onlyInitialAln = args.onlyInitialAln

@@ -40,6 +40,8 @@ def buildInitialTree(context, workingDir, treeType):
         Configs.log("Building PASTA-style FastTree initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
         alignPath = os.path.join(tempDir, "initial_align.txt")
         buildInitialAlignment(context.unalignedSequences, tempDir, Configs.decompositionSkeletonSize, None, alignPath)
+        if Configs.outputInitialAlignment:
+            buildNaiveAlignment(context.unalignedSequences, tempDir, Configs.outputInitialAlignment)
         external_tools.runFastTree(alignPath, tempDir, outputTreePath, "fast").run()
     elif treeType is None or treeType.lower() == "fasttree-noml": 
         Configs.log("Building PASTA-style FastTree (NO ML) initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
@@ -78,9 +80,6 @@ def buildInitialAlignment(sequences, tempDir, skeletonSize, initialAlignSize, ou
     
     if initialAlignSize is None or initialAlignSize > len(sequences):
         initialAlignSize = len(sequences)
-    # if Configs.emulatePasta:
-    #     skeletonTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize, mode="random")
-    # else:
     skeletonTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize)
     additional = initialAlignSize-skeletonSize
     random.shuffle(remainingTaxa)
@@ -96,5 +95,16 @@ def buildInitialAlignment(sequences, tempDir, skeletonSize, initialAlignSize, ou
         task.submitTasks(hmmTasks)
         for hmmTask in task.asCompleted(hmmTasks):
             hmmutils.mergeHmmAlignments([hmmTask.outputFile], outputAlignPath, includeInsertions=False)
-            if Configs.graphBuildMethod == "initial":
+            if Configs.graphBuildMethod == "initial": # effectively NOP for now
                 hmmutils.mergeHmmAlignments([hmmTask.outputFile], initialInsertPath, includeInsertions=True)
+
+def buildNaiveAlignment(sequences, tempDir, outputAlignPath):
+    # assuming that buildInitialAlignment has already been called
+    queriesPath = os.path.join(tempDir, "queries_all.txt")
+    hmmDir = os.path.join(tempDir, "skeleton_hmm")
+    sequenceutils.writeFasta(sequences, queriesPath)
+    hmmPath = os.path.join(hmmDir, "hmm_model.txt")
+    hmmTasks = hmmutils.hmmAlignQueries(hmmPath, queriesPath)
+    task.submitTasks(hmmTasks)
+    for hmmTask in task.asCompleted(hmmTasks):
+        hmmutils.mergeHmmAlignments([hmmTask.outputFile], outputAlignPath, includeInsertions=True)

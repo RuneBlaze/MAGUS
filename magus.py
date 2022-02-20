@@ -148,6 +148,8 @@ def parseArgs():
                         help="Allow lossy alignment compression above the size limit (true or false)", required=False, default="true")
     parser.add_argument('--p0', action='store_true', help="emualte PASTA in the initial decomposition strategy")
     parser.add_argument("--skeleton", type=str, help="path to the skeleton file", required=False, default=None)
+    parser.add_argument('--initialAln', type=str, help="output the initial alignment", required=False, default=None)
+    parser.add_argument('--onlyInitialAln', action='store_true')
     return parser.parse_args()
 
 if __name__ == '__main__':
