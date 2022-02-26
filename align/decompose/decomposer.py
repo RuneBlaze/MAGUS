@@ -77,7 +77,7 @@ def guess_isfasta(p):
     else:
         return False
 
-def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength"):
+def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength", maximalist = False):
     allTaxa = list(sequences.keys())
 
     if Configs.skeletonSeqs:
@@ -109,8 +109,10 @@ def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength"):
                 notFullLength.append(t) 
         
         random.shuffle(fullLength)
-        random.shuffle(notFullLength)     
+        random.shuffle(notFullLength)
         allTaxa = fullLength + notFullLength
+        if maximalist:
+            return fullLength[:skeletonSize], fullLength[skeletonSize:], notFullLength
     else:
         random.shuffle(allTaxa)
         

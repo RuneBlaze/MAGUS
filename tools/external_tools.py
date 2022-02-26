@@ -130,6 +130,25 @@ def runRaxmlNg(fastaFilePath, workingDir, outputPath, threads = Configs.numCores
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {raxmlFile : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
+def runEpaNg(refMsaP, refTreeP, queryMsaP, workingDir, outputPath, threads = Configs.numCores):
+    args = ['epa-ng']
+    if Configs.inferDataType(queryMsaP) == "protein":
+        args.extend(["--model", "LG+G"])
+    else:
+        args.extend(["--model", "GTR+G"])
+    baseName = os.path.basename(outputPath).replace(".","")
+    epaNgFile = os.path.join(workingDir, "epa_result.jplace")
+    args.extend(["--ref-msa", refMsaP, "--tree", refTreeP, "--query", queryMsaP, "-w", workingDir])
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {epaNgFile : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
+def runGappaGraft(jplaceFile, workingDir, outputPath):
+    args = ['gappa', 'examine', 'graft', '--fully-resolve', '--jplace-path', jplaceFile]
+    args.extend(['--out-dir', workingDir])
+    graftRes = os.path.join(workingDir, "initial_jplace.newick")
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {graftRes : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
 def runHmmBuild(alignmentPath, workingDir, outputPath):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
     args = [Configs.hmmbuildPath,'--ere', '0.59', "--cpu", "1"]
