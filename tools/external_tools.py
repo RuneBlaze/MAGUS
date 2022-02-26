@@ -142,8 +142,11 @@ def runEpaNg(refMsaP, refTreeP, queryMsaP, workingDir, outputPath, threads = Con
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {epaNgFile : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
-def runGappaGraft(jplaceFile, workingDir, outputPath):
-    args = ['gappa', 'examine', 'graft', '--fully-resolve', '--jplace-path', jplaceFile]
+def runGappaGraft(jplaceFile, workingDir, outputPath, fullyResolve = True):
+    args = ['gappa', 'examine', 'graft']
+    if fullyResolve:
+        args.extend(['--fully-resolve'])
+    args.extend(['--jplace-path', jplaceFile])
     args.extend(['--out-dir', workingDir])
     graftRes = os.path.join(workingDir, "initial_jplace.newick")
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {graftRes : outputPath}, "workingDir" : workingDir}

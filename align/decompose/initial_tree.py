@@ -155,7 +155,8 @@ def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlig
         for hmmTask in task.asCompleted(hmmTasks):
             hmmutils.mergeHmmAlignments([hmmTask.outputFile], rest_path, includeInsertions=False)
         external_tools.runEpaNg(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
-        external_tools.runGappaGraft(outputJplacePath, tempDir, outputTreePath).run()
+        Configs.log(f"grafting the insetions, fully resolve = {not Configs.exp}")
+        external_tools.runGappaGraft(outputJplacePath, tempDir, outputTreePath, fullyResolve = not Configs.exp).run()
     else:
         shutil.copy(bb_tree, outputTreePath)
     # now we have an alignment over, run epa-ng
