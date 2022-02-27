@@ -36,6 +36,8 @@ class Configs:
     guideTree = "fasttree"
     outputPath = None
     dataType = None
+
+    targetLength = None
     
     decompositionMaxNumSubsets = 25
     decompositionMaxSubsetSize = 50

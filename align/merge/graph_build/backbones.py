@@ -46,6 +46,9 @@ def assignBackboneTaxa(context, missingBackbones):
     
     numTaxa = max(1, int(Configs.mafftSize/len(context.subsetPaths)))
     backbones = {file : {} for file in missingBackbones}
+
+    if Configs.graphBuildStrategy.lower() == "eligible":
+        buildBackbonesEligible(context, backbones, numTaxa)
     
     if Configs.graphBuildStrategy.lower() == "random":    
         buildBackbonesRandom(context, backbones, numTaxa)
@@ -91,6 +94,32 @@ def buildBackbonesRandom(context, backbones, numTaxa):
             random.shuffle(subset)
             for taxon in subset[:numTaxa]:
                 backbone[taxon] = context.unalignedSequences[taxon]       
+
+def buildBackbonesEligible(context, backbones, numTaxa):
+    sequences = context.unalignedSequences
+    Configs.log("Preparing {} backbones with {} ELIGIBLE sequences per subset..".format(len(backbones), numTaxa))
+    seqLengths = [len(sequences[t].seq) for t in sequences]
+    seqLengths.sort()
+    threshold = 0.5 if Configs.skeletonSeqs == "median" else 0.75
+    topQuartile = seqLengths[int(threshold*(len(seqLengths)-1))]
+    Configs.targetLength = topQuartile
+    Configs.log(f"Target length {topQuartile} for eligibility")
+
+    for file, backbone in backbones.items():
+        for subset in context.subsets:
+            eligible = []
+            ineligible = []
+            for t in subset:
+                if abs(len(sequences[t].seq) - Configs.targetLength) < 0.25 * Configs.targetLength:
+                    eligible.append(t)
+                else:
+                    ineligible.append(t)
+            Configs.log(f"Total eligible sequences: {len(eligible)}, ineligible: {len(ineligible)}")
+            random.shuffle(eligible)
+            random.shuffle(ineligible)
+            everything = eligible + ineligible
+            for taxon in everything[:numTaxa]:
+                backbone[taxon] = context.unalignedSequences[taxon]
 
 def buildBackbonesLongest(context, backbones, numTaxa):
     Configs.log("Preparing {} backbones with {} LONGEST sequences per subset..".format(len(backbones), numTaxa))

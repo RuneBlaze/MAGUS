@@ -102,6 +102,7 @@ def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength", maximalist 
         
         fullLength = []
         notFullLength = []
+        Configs.targetLength = topQuartile
         for t in allTaxa:
             if abs(len(sequences[t].seq) - topQuartile) < 0.25 * topQuartile:
                 fullLength.append(t)
