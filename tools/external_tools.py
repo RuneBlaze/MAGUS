@@ -139,7 +139,7 @@ def runRaxmlEvaluate(msaPath, workingDir, treePath, outputPath):
             "--msa", msaPath,
             "--prefix", baseName,
             "--tree", treePath,
-            "--threads", "auto{"+str(Configs.numCores)+"}",
+            "--threads", "auto",
             "--seed", str(seed)]
     if Configs.inferDataType(msaPath) == "protein":
         args.extend(["--model", "LG+G"])
