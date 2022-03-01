@@ -82,6 +82,14 @@ def assignBackboneTaxa(context, missingBackbones):
             if s >= 0.75:
                 return 'S'
         return 'L'
+    def eligible_oracle8(b, s):
+        if b >= 0.0:
+            return 'S'
+        return 'L'
+    def eligible_oracle9(b, s):
+        if b >= 0.25:
+            return 'S'
+        return 'L'
     
     gbs = Configs.graphBuildStrategy.lower()
     if len(gbs) == len("eligibleX"):
@@ -93,6 +101,8 @@ def assignBackboneTaxa(context, missingBackbones):
             5: eligible_oracle5,
             6: eligible_oracle6,
             7: eligible_oracle7,
+            8: eligible_oracle8,
+            9: eligible_oracle9,
         }[variant]
         Configs.log(f"Using oracle {oracle}")
         buildBackbonesEligible(context, backbones, numTaxa, oracle)
