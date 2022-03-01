@@ -6,7 +6,7 @@ using PyCall
 using Base.Filesystem
 using Logging
 pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
-FRAGMENTARY = true # temporary flag just for fun/sorrow/absurdity of life
+FRAGMENTARY = false # temporary flag just for fun/sorrow/absurdity of life
 function main()
     external_tools = pyimport("tools.external_tools")
     curious_tree = pyimport("curious_tree")
