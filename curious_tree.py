@@ -21,13 +21,13 @@ def estimate_tree(input, output):
         else:
             notfulllength.append(r)
 
-    alignDir = os.path.abspath(args.output + "_env")
+    alignDir = os.path.abspath(output + "_env")
     def consumeTask(t):
         t.taskArgs["workingDir"] = alignDir
         t.run()
 
-    fullPath = args.output + ".full"
-    notFullPath = args.output + ".nf"
+    fullPath = output + ".full"
+    notFullPath = output + ".nf"
     if not os.path.exists(alignDir):
         os.mkdir(alignDir)
     SeqIO.write(fulllength, fullPath, "fasta")
