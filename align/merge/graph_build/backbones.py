@@ -13,6 +13,7 @@ from helpers import sequenceutils
 from tasks import task
 from configuration import Configs
 from tools import external_tools
+import itertools
 
 
 def requestMafftBackbones(context):
@@ -49,6 +50,52 @@ def assignBackboneTaxa(context, missingBackbones):
 
     if Configs.graphBuildStrategy.lower() == "eligible":
         buildBackbonesEligible(context, backbones, numTaxa)
+    
+    def eligible_oracle2(b, s):
+        if b >= 0.5:
+            if s >= 0.9:
+                return 'S'
+        return 'L'
+    def eligible_oracle3(b, s):
+        if b >= 0.5:
+            return 'M'
+        return 'L'
+    def eligible_oracle4(b, s):
+        if b >= 0.5:
+            return 'S'
+        return 'L'
+    def eligible_oracle5(b, s):
+        if b >= 0.75:
+            if s >= 0.5:
+                return 'S'
+        elif b >= 0.5:
+            if s >= 0.5:
+                return 'M'
+        return 'L'
+    def eligible_oracle6(b, s):
+        if b >= 0.5:
+            if s >= 0.5:
+                return 'S'
+        return 'L'
+    def eligible_oracle7(b, s):
+        if b >= 0.5:
+            if s >= 0.75:
+                return 'S'
+        return 'L'
+    
+    gbs = Configs.graphBuildStrategy.lower()
+    if len(gbs) == len("eligibleX"):
+        variant = int(gbs[-1])
+        oracle = {
+            2: eligible_oracle2,
+            3: eligible_oracle3,
+            4: eligible_oracle4,
+            5: eligible_oracle5,
+            6: eligible_oracle6,
+            7: eligible_oracle7,
+        }[variant]
+        Configs.log(f"Using oracle {oracle}")
+        buildBackbonesEligible(context, backbones, numTaxa, oracle)
     
     if Configs.graphBuildStrategy.lower() == "random":    
         buildBackbonesRandom(context, backbones, numTaxa)
@@ -95,7 +142,7 @@ def buildBackbonesRandom(context, backbones, numTaxa):
             for taxon in subset[:numTaxa]:
                 backbone[taxon] = context.unalignedSequences[taxon]       
 
-def buildBackbonesEligible(context, backbones, numTaxa):
+def buildBackbonesEligible(context, backbones, numTaxa, oracle = lambda a, b: 'L'):
     sequences = context.unalignedSequences
     Configs.log("Preparing {} backbones with {} ELIGIBLE sequences per subset..".format(len(backbones), numTaxa))
     seqLengths = [len(sequences[t].seq) for t in sequences]
@@ -104,9 +151,14 @@ def buildBackbonesEligible(context, backbones, numTaxa):
     topQuartile = seqLengths[int(threshold*(len(seqLengths)-1))]
     Configs.targetLength = topQuartile
     Configs.log(f"Target length {topQuartile} for eligibility")
-
+    bid = 0
     for file, backbone in backbones.items():
-        for subset in context.subsets:
+        bpercent = (bid + 1) / len(backbones)
+        bb_log = ""
+        perm = [y for y, _ in enumerate(context.subsets)]
+        random.shuffle(perm)
+        for sid, subset in enumerate(context.subsets):
+            spercent = (perm[sid] + 1) / len(context.subsets)
             eligible = []
             ineligible = []
             for t in subset:
@@ -114,12 +166,24 @@ def buildBackbonesEligible(context, backbones, numTaxa):
                     eligible.append(t)
                 else:
                     ineligible.append(t)
-            Configs.log(f"Total eligible sequences: {len(eligible)}, ineligible: {len(ineligible)}")
+            if bid == 0:
+                Configs.log(f"Total eligible sequences: {len(eligible)}, ineligible: {len(ineligible)}")
             random.shuffle(eligible)
             random.shuffle(ineligible)
-            everything = eligible + ineligible
-            for taxon in everything[:numTaxa]:
+            eligible_fst = eligible + ineligible
+            ineligible_fst = ineligible + eligible
+            mixed = [x for x in itertools.chain(*itertools.zip_longest(eligible, ineligible)) if x is not None]
+            target = {
+                'L': eligible_fst,
+                'S': ineligible_fst,
+                'M': mixed,
+            }
+            s = oracle(bpercent, spercent)
+            bb_log += s
+            for taxon in target[s][:numTaxa]:
                 backbone[taxon] = context.unalignedSequences[taxon]
+        Configs.log(f"Backbone composition: {bb_log}")
+        bid += 1
 
 def buildBackbonesLongest(context, backbones, numTaxa):
     Configs.log("Preparing {} backbones with {} LONGEST sequences per subset..".format(len(backbones), numTaxa))
