@@ -166,7 +166,7 @@ def runGappaGraft(jplaceFile, workingDir, outputPath, fullyResolve = True):
         args.extend(['--fully-resolve'])
     args.extend(['--jplace-path', jplaceFile])
     args.extend(['--out-dir', workingDir])
-    graftRes = os.path.join(workingDir, "initial_jplace.newick")
+    graftRes = os.path.join(workingDir, os.path.basename(jplaceFile).replace(".jplace", ".newick"))
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {graftRes : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 

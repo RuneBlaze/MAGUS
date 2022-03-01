@@ -6,8 +6,10 @@ using PyCall
 using Base.Filesystem
 using Logging
 pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
+FRAGMENTARY = true # temporary flag just for fun/sorrow/absurdity of life
 function main()
     external_tools = pyimport("tools.external_tools")
+    curious_tree = pyimport("curious_tree")
     mask999 = pyimport("mask999")
     output_path = nothing
     output_ix = -1
@@ -43,13 +45,18 @@ function main()
         run(`magus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
         if i < its_times # if we are not at the last iteration
             # we estimate the tree
-            @info "Compressing alignment: $(output_filename) -> $(output_treename).compressed"
-            mask999.compress_alignment(output_filename, output_filename * ".compressed")
-            task = external_tools.runFastTree(output_filename * ".compressed", env_dir, output_treename, "fast")
-            taskArgs = task.taskArgs
-            taskArgs["workingDir"] = "."
-            task.taskArgs = taskArgs
-            task.run()
+            if FRAGMENTARY
+                @info "Running curious_tree estimator. I wish everything works...: $(output_filename) -> $(output_treename)"
+                curious_tree.estimate_tree(output_filename, output_treename)
+            else
+                @info "Compressing alignment: $(output_filename) -> $(output_treename).compressed"
+                mask999.compress_alignment(output_filename, output_filename * ".compressed")
+                task = external_tools.runFastTree(output_filename * ".compressed", env_dir, output_treename, "fast")
+                taskArgs = task.taskArgs
+                taskArgs["workingDir"] = "."
+                task.taskArgs = taskArgs
+                task.run()
+            end
         else
             # last iteration, move the output file to the output path
             cp(output_filename, output_path)
