@@ -6,6 +6,7 @@ using PyCall
 using Base.Filesystem
 using Logging
 pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
+MAGUS_PATH = joinpath(@__DIR__, "magus.py")
 FRAGMENTARY = false # temporary flag just for fun/sorrow/absurdity of life
 function main()
     external_tools = pyimport("tools.external_tools")
@@ -42,7 +43,7 @@ function main()
         output_treename = "$(output_path).it$(i).tre"
         env_dir = "$(dir_path)_it$(i)"
         initial_tree_arg = i == 1 ? [] : ["-t", "$(output_path).it$(i-1).tre"]
-        run(`magus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
+        run(`python3 $(MAGUS_PATH) $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
         if i < its_times # if we are not at the last iteration
             # we estimate the tree
             if FRAGMENTARY
