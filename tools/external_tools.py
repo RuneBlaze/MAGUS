@@ -130,6 +130,24 @@ def runRaxmlNg(fastaFilePath, workingDir, outputPath, threads = Configs.numCores
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {raxmlFile : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
+def runRaxmlEvaluate(msaPath, workingDir, treePath, outputPath):
+    baseName = os.path.basename(outputPath).replace(".","")
+    raxmlFile = os.path.join(workingDir, "{}.raxml.bestTree".format(baseName))
+    seed = random.randint(1, 1000000)
+    args = [Configs.raxmlPath,
+            "--evaluate",
+            "--msa", msaPath,
+            "--prefix", baseName,
+            "--tree", treePath,
+            "--threads", str(Configs.numCores),
+            "--seed", str(seed)]
+    if Configs.inferDataType(msaPath) == "protein":
+        args.extend(["--model", "LG+G"])
+    else:
+        args.extend(["--model", "GTR+G"])
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {raxmlFile : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
 def runEpaNg(refMsaP, refTreeP, queryMsaP, workingDir, outputPath, threads = Configs.numCores):
     args = ['epa-ng']
     if Configs.inferDataType(queryMsaP) == "protein":

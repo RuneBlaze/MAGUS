@@ -109,6 +109,7 @@ def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlig
     queriesPath = os.path.join(tempDir, "queries.txt") 
     hmmDir = os.path.join(tempDir, "skeleton_hmm")
     hmmPath = os.path.join(hmmDir, "hmm_model.txt")
+    bb_unopt_tree = os.path.join(tempDir, "bb_tree.unoptimized.tre")
     bb_tree = os.path.join(tempDir, "bb_tree.tre")
     rest_path = os.path.join(tempDir, "rest.fa")
     outputJplacePath = os.path.join(tempDir, "initial_jplace.jplace")
@@ -143,7 +144,8 @@ def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlig
         for addHmmTask in task.asCompleted(addHmmTasks):
             hmmutils.mergeHmmAlignments([addHmmTask.outputFile], outputAlignPath, includeInsertions=False)
     # build an initial tree on the skeleton alignment, called the bb_tree
-    external_tools.runFastTree(outputAlignPath, tempDir, bb_tree).run()
+    external_tools.runFastTree(outputAlignPath, tempDir, bb_unopt_tree).run()
+    external_tools.runRaxmlEvaluate(outputAlignPath, tempDir, bb_unopt_tree, bb_tree).run()
     if len(remainingTaxa) > 0:
         sequenceutils.writeFasta(sequences, queriesPath, remainingTaxa)    
         if len(addTaxa) <= 0:
@@ -155,7 +157,7 @@ def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlig
         for hmmTask in task.asCompleted(hmmTasks):
             hmmutils.mergeHmmAlignments([hmmTask.outputFile], rest_path, includeInsertions=False)
         external_tools.runEpaNg(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
-        Configs.log(f"grafting the insetions, fully resolve = {not Configs.exp}")
+        Configs.log(f"grafting the insertions, fully resolve = {not Configs.exp}")
         external_tools.runGappaGraft(outputJplacePath, tempDir, outputTreePath, fullyResolve = not Configs.exp).run()
     else:
         shutil.copy(bb_tree, outputTreePath)
