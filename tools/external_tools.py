@@ -133,6 +133,7 @@ def runRaxmlNg(fastaFilePath, workingDir, outputPath, threads = Configs.numCores
 def runRaxmlEvaluate(msaPath, workingDir, treePath, outputPath):
     baseName = os.path.basename(outputPath).replace(".","")
     raxmlFile = os.path.join(workingDir, "{}.raxml.bestTree".format(baseName))
+    bestModelFile = os.path.join(workingDir, "{}.raxml.bestModel".format(baseName))
     seed = random.randint(1, 1000000)
     args = [Configs.raxmlPath,
             "--evaluate",
@@ -145,18 +146,24 @@ def runRaxmlEvaluate(msaPath, workingDir, treePath, outputPath):
         args.extend(["--model", "LG+G"])
     else:
         args.extend(["--model", "GTR+G"])
-    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {raxmlFile : outputPath}, "workingDir" : workingDir}
+    taskArgs = {"command" : subprocess.list2cmdline(args), 
+        "fileCopyMap" : {raxmlFile : outputPath, bestModelFile: outputPath + ".model"}, 
+        "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
 def runEpaNg(refMsaP, refTreeP, queryMsaP, workingDir, outputPath, threads = Configs.numCores):
     args = ['epa-ng']
-    if Configs.inferDataType(queryMsaP) == "protein":
-        args.extend(["--model", "LG+G"])
-    else:
-        args.extend(["--model", "GTR+G"])
+    # if Configs.inferDataType(queryMsaP) == "protein":
+    #     args.extend(["--model", "LG+G"])
+    # else:
+    #     args.extend(["--model", "GTR+G"])
     baseName = os.path.basename(outputPath).replace(".","")
     epaNgFile = os.path.join(workingDir, "epa_result.jplace")
+    with open(refTreeP + ".model") as fh:
+        modelArgs = fh.read().strip().split(",")[0]
     args.extend(["--ref-msa", refMsaP, "--tree", refTreeP, "--query", queryMsaP, "-w", workingDir])
+    Configs.log("Model args for EPA-ng: {}".format(modelArgs))
+    args.extend(["--model", modelArgs])
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {epaNgFile : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
