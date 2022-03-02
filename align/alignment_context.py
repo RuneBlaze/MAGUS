@@ -24,6 +24,8 @@ class AlignmentContext:
         self.sequencesPath = None
         self.subsetPaths = []
         self.subalignmentPaths = []
+        self.fullSequences = set([])
+        self.fragSequences = set([])
         self.backbonePaths = []
         self.guideTree = None
         

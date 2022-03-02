@@ -63,8 +63,12 @@ def buildDecomposition(context, subsetsDir):
     else:
         guideTreePath  = initial_tree.buildInitialTree(context, subsetsDir, context.guideTree)
         Configs.log("Using target subset size of {}, and maximum number of subsets {}..".format(Configs.decompositionMaxSubsetSize, Configs.decompositionMaxNumSubsets))
+        weightSet = set([])
+        if Configs.decompositionStrategy == "noodle":
+            Configs.log("Total num. of full length sequences: {}".format(len(context.fullSequences)))
+            weightSet = context.fullSequences
         context.subsetPaths = treeutils.decomposeGuideTree(subsetsDir, context.sequencesPath, guideTreePath, 
-                                                   Configs.decompositionMaxSubsetSize, Configs.decompositionMaxNumSubsets)        
+                                                   Configs.decompositionMaxSubsetSize, Configs.decompositionMaxNumSubsets, weightSet)        
 
 def pasta_shim(n):
     return n.replace("_","").replace("/","").replace("-","").lower()
@@ -77,7 +81,7 @@ def guess_isfasta(p):
     else:
         return False
 
-def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength", maximalist = False):
+def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength", maximalist = False, context = None):
     allTaxa = list(sequences.keys())
 
     if Configs.skeletonSeqs:
@@ -108,7 +112,11 @@ def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength", maximalist 
                 fullLength.append(t)
             else:
                 notFullLength.append(t) 
-        
+        if context:
+            #TODO: this will not work when MAGUS restarts
+            Configs.log("Wrote full and fragged taxa set to context")
+            context.fullSequences = set(fullLength)
+            context.fragSequences = set(notFullLength)
         random.shuffle(fullLength)
         random.shuffle(notFullLength)
         allTaxa = fullLength + notFullLength

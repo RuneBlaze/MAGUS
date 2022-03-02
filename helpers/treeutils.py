@@ -91,7 +91,8 @@ def compareDendropyTrees(tr1, tr2):
 
     return (nl, ei1, ei2, fp, fn, rf)
 
-def decomposeGuideTree(subsetsDir, sequencesPath, guideTreePath, maxSubsetSize, maxNumSubsets):
+def decomposeGuideTree(
+    subsetsDir, sequencesPath, guideTreePath, maxSubsetSize, maxNumSubsets, countingSeqs = set([])):
     sequences = sequenceutils.readFromFasta(sequencesPath, removeDashes = False)
     guideTree = dendropy.Tree.get(path=guideTreePath, schema="newick", preserve_underscores=True)
     guideTree.collapse_basal_bifurcation()
@@ -99,9 +100,15 @@ def decomposeGuideTree(subsetsDir, sequencesPath, guideTreePath, maxSubsetSize, 
     for edge in guideTree.postorder_edge_iter():
         if len(edge.head_node.child_edges()) > 0:
             edge.childs = sum([e.childs for e in edge.head_node.child_edges()])
+            edge.weight = sum([e.weight for e in edge.head_node.child_edges()])
         else:
             edge.childs = 1
-    guideTree.childs = guideTree.seed_node.edge.childs       
+            if not countingSeqs:
+                edge.weight = 1
+            else:
+                edge.weight = edge.head_node.taxon.label in countingSeqs
+    guideTree.childs = guideTree.seed_node.edge.childs
+    guideTree.weight = guideTree.seed_node.edge.weight
     trees = decomposeTree(guideTree, maxSubsetSize, maxNumSubsets)
     
     taxonSubsets = []
@@ -118,7 +125,7 @@ def decomposeGuideTree(subsetsDir, sequencesPath, guideTreePath, maxSubsetSize, 
 
 def decomposeTree(tree, maxSubsetSize, numSubsets):
     trees = [tree]
-    if Configs.emulatePasta:
+    if Configs.emulatePasta: # FIXME: this is ugly
         maxSubsetSize = 200
         numSubsets = 1231231234
     while len(trees) < numSubsets:
@@ -141,11 +148,14 @@ def bipartitionByEdge(tree, edge):
     tail.remove_child(newRoot)
     newTree = dendropy.Tree(seed_node=newRoot, taxon_namespace = tree.taxon_namespace)
     newTree.childs = edge.childs
+    newTree.weight = edge.weight
     tree.childs = tree.childs - newTree.childs
+    tree.weight = tree.weight - newTree.weight
     
     curNode = tail
     while curNode is not None:
         curNode.edge.childs = curNode.edge.childs - edge.childs
+        curNode.edge.weight = curNode.edge.weight - edge.weight
         curNode = curNode.edge.tail_node
         
     newTree.collapse_basal_bifurcation()
@@ -165,7 +175,7 @@ def getCentroidEdge(tree):
     for edge in tree.postorder_edge_iter():
         if edge.tail_node is None:
             continue
-        balance = abs(tree.childs/2 - edge.childs)
+        balance = abs(tree.weight/2 - edge.weight)
         if balance < bestBalance:
             bestBalance = balance
             bestEdge = edge  

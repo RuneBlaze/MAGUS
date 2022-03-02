@@ -48,7 +48,9 @@ def buildInitialTree(context, workingDir, treeType):
          Configs.log("Building epa-ng initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
          Configs.log("Maximalist mode: {}".format(mm))
          alignPath = os.path.join(tempDir, "initial_align.txt")
-         epaNgPipeline(context.unalignedSequences, tempDir, Configs.decompositionSkeletonSize, None, alignPath, maximalist = mm)
+         epaNgPipeline(
+             context.unalignedSequences, tempDir, Configs.decompositionSkeletonSize, None, alignPath, 
+             maximalist = mm, context = context)
     elif treeType is None or treeType.lower() == "fasttree-noml": 
         Configs.log("Building PASTA-style FastTree (NO ML) initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
         alignPath = os.path.join(tempDir, "initial_align.txt")
@@ -104,7 +106,8 @@ def buildInitialAlignment(sequences, tempDir, skeletonSize, initialAlignSize, ou
             if Configs.graphBuildMethod == "initial": # effectively NOP for now
                 hmmutils.mergeHmmAlignments([hmmTask.outputFile], initialInsertPath, includeInsertions=True)
 
-def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlignPath, maximalist = False):
+def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlignPath, 
+    maximalist = False, context = None):
     skeletonPath = os.path.join(tempDir, "skeleton_sequences.txt")
     queriesPath = os.path.join(tempDir, "queries.txt") 
     hmmDir = os.path.join(tempDir, "skeleton_hmm")
@@ -122,10 +125,11 @@ def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlig
         initialAlignSize = len(sequences)
     # select the skeleton sequences
     if not maximalist:
-        skeletonTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize)
+        skeletonTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize, context = context)
         addTaxa = []
     else:
-        skeletonTaxa, addTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize, maximalist = True)
+        skeletonTaxa, addTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize, 
+            maximalist = True, context= context)
     # additional = initialAlignSize - skeletonSize
     random.shuffle(remainingTaxa)
     random.shuffle(addTaxa)
