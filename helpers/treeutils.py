@@ -137,7 +137,7 @@ def decomposeTree(tree, maxSubsetSize, numSubsets):
             numChilds = largestTree.childs
             e = getCentroidEdge(largestTree)
             t1, t2 = bipartitionByEdge(largestTree, e)
-            Configs.log("Decomposing a tree with {} leaves into {} and {}..".format(numChilds, t1.childs, t2.childs))
+            Configs.log("Decomposing a tree with {} leaves into {}({}) and {}({})..".format(numChilds, t1.childs, t1.weight, t2.childs, t2.weight))
             trees.remove(largestTree)
             trees = trees + [t1, t2]
     return trees
