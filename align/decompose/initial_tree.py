@@ -146,12 +146,15 @@ def placementPipeline(sequences, tempDir, skeletonSize, initialAlignSize, output
     if Configs.exp:
         Configs.log("Using MAGUS to build skeleton alignment..")
         s = Configs.decompositionSkeletonSize
+        gbs = Configs.graphBuildStrategy
         Configs.decompositionSkeletonSize = 300
+        Configs.graphBuildStrategy = "random"
         subalignmentDir = os.path.join(tempDir, "skeleton_magusenv")
         subalignmentTask = createAlignmentTask({"outputFile" : outputAlignPath, "workingDir" : subalignmentDir, 
                                                     "sequencesPath" : skeletonPath, "guideTree" : "fasttree"})
         subalignmentTask.run()
         Configs.decompositionSkeletonSize = s
+        Configs.graphBuildStrategy = gbs
     else:
         external_tools.runMafft(skeletonPath, None, tempDir, outputAlignPath, Configs.numCores).run()
     if len(addTaxa) > 0:
@@ -184,8 +187,8 @@ def placementPipeline(sequences, tempDir, skeletonSize, initialAlignSize, output
             external_tools.runEpaNg(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
         else:
             external_tools.runPplacer(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
-        Configs.log(f"grafting the insertions, fully resolve = {Configs.exp}")
-        external_tools.runGappaGraft(outputJplacePath, tempDir, outputTreePath, fullyResolve = Configs.exp).run()
+        # Configs.log(f"grafting the insertions, fully resolve = {Configs.exp}")
+        external_tools.runGappaGraft(outputJplacePath, tempDir, outputTreePath, fullyResolve = False).run()
     else:
         shutil.copy(bb_tree, outputTreePath)
     # now we have an alignment over, run epa-ng
