@@ -82,8 +82,8 @@ def guess_isfasta(p):
         return False
 
 def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength", maximalist = False, context = None):
+    Configs.log("Choosing {} taxa for skeleton..".format(skeletonSize))
     allTaxa = list(sequences.keys())
-
     if Configs.skeletonSeqs:
         if guess_isfasta(Configs.skeletonSeqs):
             Configs.log("Using provided skeleton sequences.. from {}".format(Configs.skeletonSeqs))
@@ -102,6 +102,7 @@ def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength", maximalist 
         #topQuartile = numpy.quantile(seqLengths, 0.75)
         seqLengths.sort()
         threshold = 0.5 if mode == "median" else 0.75
+        Configs.log(f"Using {mode} threshold of {threshold}")
         topQuartile = seqLengths[int(threshold*(len(seqLengths)-1))]
         
         fullLength = []
@@ -117,6 +118,7 @@ def chooseSkeletonTaxa(sequences, skeletonSize, mode = "fulllength", maximalist 
             Configs.log("Wrote full and fragged taxa set to context")
             context.fullSequences = set(fullLength)
             context.fragSequences = set(notFullLength)
+        Configs.log(f"{len(fullLength)} full length taxa, {len(notFullLength)} fragmented taxa")
         random.shuffle(fullLength)
         random.shuffle(notFullLength)
         allTaxa = fullLength + notFullLength

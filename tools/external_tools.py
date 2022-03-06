@@ -10,6 +10,7 @@ import random
 import shutil
 from configuration import Configs
 from tasks.task import Task
+from helpers.translate_raxml import translate_raxml
 
 def runCommand(**kwargs):
     command = kwargs["command"]
@@ -151,12 +152,19 @@ def runRaxmlEvaluate(msaPath, workingDir, treePath, outputPath):
         "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
+def runOldRmEvaluate(msaPath, workingDir, treePath, outputPath):
+    # FIXME: this only handles nucleotide data
+    args = ["raxmlHPC", "-f", "e", "-t" , treePath, "-m", "GTRGAMMA", 
+    "-s", msaPath, "-n", "oldraxml", "w", workingDir]
+    outTreeP = os.path.join(workingDir, "RAxML_result.oldraxml")
+    infoP = os.path.join(workingDir, "RAxML_info.oldraxml")
+    taskArgs = {"command" : subprocess.list2cmdline(args), 
+        "fileCopyMap" : {outTreeP : outputPath, infoP: outputPath + ".info"}, 
+        "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
 def runEpaNg(refMsaP, refTreeP, queryMsaP, workingDir, outputPath, threads = Configs.numCores):
     args = ['epa-ng']
-    # if Configs.inferDataType(queryMsaP) == "protein":
-    #     args.extend(["--model", "LG+G"])
-    # else:
-    #     args.extend(["--model", "GTR+G"])
     baseName = os.path.basename(outputPath).replace(".","")
     epaNgFile = os.path.join(workingDir, "epa_result.jplace")
     with open(refTreeP + ".model") as fh:
@@ -165,6 +173,16 @@ def runEpaNg(refMsaP, refTreeP, queryMsaP, workingDir, outputPath, threads = Con
     Configs.log("Model args for EPA-ng: {}".format(modelArgs))
     args.extend(["--model", modelArgs])
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {epaNgFile : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
+def runPplacer(refMsaP, refTreeP, queryMsaP, workingDir, outputPath, threads = Configs.numCores):
+    args = ['pplacer']
+    baseName = os.path.basename(outputPath).replace(".","")
+    pplacerFile = os.path.join(workingDir, "{}.jplace".format(baseName))
+    translate_raxml(refTreeP + ".info", refTreeP + ".oldinfo")
+    args.extend(["-r", refMsaP, "-t", refTreeP, "-s", refTreeP + ".oldinfo", queryMsaP])
+    args.extend(["-j", str(threads), "-o", pplacerFile])
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {pplacerFile : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
 def runGappaGraft(jplaceFile, workingDir, outputPath, fullyResolve = True):

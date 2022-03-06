@@ -177,7 +177,6 @@ def buildConfigs(args):
     
     Configs.graphBuildMethod = args.graphbuildmethod
     Configs.graphBuildHmmExtend = args.graphbuildhmmextend.lower() == "true"
-    # print(Configs.graphBuildHmmExtend)
     Configs.graphBuildRestrict = args.graphbuildrestrict.lower() == "true"
     Configs.graphBuildStrategy = args.graphbuildstrategy
     Configs.graphClusterMethod = args.graphclustermethod

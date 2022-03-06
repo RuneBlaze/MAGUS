@@ -20,6 +20,11 @@ Different options for estimating a guide tree.
 The main ones are FastTree (for accuracy) and Clustal Omega's mbed (for speed).
 '''
 
+
+# FIXME: duplicate code
+def createAlignmentTask(args):
+    return task.Task(taskType = "runAlignmentTask", outputFile = args["outputFile"], taskArgs = args)
+
 def buildInitialTree(context, workingDir, treeType):
     if treeType is not None and os.path.exists(treeType):
         Configs.log("Found user guide tree {}".format(treeType))
@@ -43,14 +48,13 @@ def buildInitialTree(context, workingDir, treeType):
         if Configs.outputInitialAlignment:
             buildNaiveAlignment(context.unalignedSequences, tempDir, Configs.outputInitialAlignment)
         external_tools.runFastTree(alignPath, tempDir, outputTreePath, "fast").run()
-    elif treeType is None or treeType.lower() == "epa-ng":
-         mm = treeType[0] == 'E'
-         Configs.log("Building epa-ng initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
-         Configs.log("Maximalist mode: {}".format(mm))
+    elif treeType is None or treeType.lower() == "epa-ng" or treeType.lower() == "pplacer":
+         mm = True
+         Configs.log("Building placement based initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
          alignPath = os.path.join(tempDir, "initial_align.txt")
-         epaNgPipeline(
+         placementPipeline(
              context.unalignedSequences, tempDir, Configs.decompositionSkeletonSize, None, alignPath, 
-             maximalist = mm, context = context)
+             maximalist = mm, context = context, placement = treeType.lower())
     elif treeType is None or treeType.lower() == "fasttree-noml": 
         Configs.log("Building PASTA-style FastTree (NO ML) initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
         alignPath = os.path.join(tempDir, "initial_align.txt")
@@ -106,8 +110,10 @@ def buildInitialAlignment(sequences, tempDir, skeletonSize, initialAlignSize, ou
             if Configs.graphBuildMethod == "initial": # effectively NOP for now
                 hmmutils.mergeHmmAlignments([hmmTask.outputFile], initialInsertPath, includeInsertions=True)
 
-def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlignPath, 
-    maximalist = False, context = None):
+def placementPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlignPath, 
+    maximalist = False, context = None, placement = None):
+    assert placement is not None
+    Configs.log("placement method: {}".format(placement))
     skeletonPath = os.path.join(tempDir, "skeleton_sequences.txt")
     queriesPath = os.path.join(tempDir, "queries.txt") 
     hmmDir = os.path.join(tempDir, "skeleton_hmm")
@@ -130,14 +136,24 @@ def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlig
     else:
         skeletonTaxa, addTaxa, remainingTaxa = decomposer.chooseSkeletonTaxa(sequences, skeletonSize, 
             maximalist = True, context= context)
-    # additional = initialAlignSize - skeletonSize
+        Configs.log(f"Skeleton size: {skeletonSize}")
+        Configs.log(f"# of skeleton taxa: {len(skeletonTaxa)}, # of additional taxa: {len(addTaxa)}, # of remaining taxa: {len(remainingTaxa)}")
     random.shuffle(remainingTaxa)
     random.shuffle(addTaxa)
-    # remainingTaxa, unusedTaxa = remainingTaxa[:additional], remainingTaxa[additional:]
     
     sequenceutils.writeFasta(sequences, skeletonPath, skeletonTaxa)
     # build the skeleton alignment
-    external_tools.runMafft(skeletonPath, None, tempDir, outputAlignPath, Configs.numCores).run()
+    if Configs.exp:
+        Configs.log("Using MAGUS to build skeleton alignment..")
+        s = Configs.decompositionSkeletonSize
+        Configs.decompositionSkeletonSize = 300
+        subalignmentDir = os.path.join(tempDir, "skeleton_magusenv")
+        subalignmentTask = createAlignmentTask({"outputFile" : outputAlignPath, "workingDir" : subalignmentDir, 
+                                                    "sequencesPath" : skeletonPath, "guideTree" : "fasttree"})
+        subalignmentTask.run()
+        Configs.decompositionSkeletonSize = s
+    else:
+        external_tools.runMafft(skeletonPath, None, tempDir, outputAlignPath, Configs.numCores).run()
     if len(addTaxa) > 0:
         addHmmPath = os.path.join(hmmDir, "add_hmm_model.txt")
         addQueriesPath = os.path.join(tempDir, "add_queries.txt")
@@ -149,7 +165,11 @@ def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlig
             hmmutils.mergeHmmAlignments([addHmmTask.outputFile], outputAlignPath, includeInsertions=False)
     # build an initial tree on the skeleton alignment, called the bb_tree
     external_tools.runFastTree(outputAlignPath, tempDir, bb_unopt_tree).run()
-    external_tools.runRaxmlEvaluate(outputAlignPath, tempDir, bb_unopt_tree, bb_tree).run()
+    if placement == "epa-ng":
+        external_tools.runRaxmlEvaluate(outputAlignPath, tempDir, bb_unopt_tree, bb_tree).run()
+    else:
+        # raxml HPC
+        external_tools.runOldRmEvaluate(outputAlignPath, tempDir, bb_unopt_tree, bb_tree).run()
     if len(remainingTaxa) > 0:
         sequenceutils.writeFasta(sequences, queriesPath, remainingTaxa)    
         if len(addTaxa) <= 0:
@@ -160,9 +180,12 @@ def epaNgPipeline(sequences, tempDir, skeletonSize, initialAlignSize, outputAlig
         task.submitTasks(hmmTasks)
         for hmmTask in task.asCompleted(hmmTasks):
             hmmutils.mergeHmmAlignments([hmmTask.outputFile], rest_path, includeInsertions=False)
-        external_tools.runEpaNg(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
-        Configs.log(f"grafting the insertions, fully resolve = {not Configs.exp}")
-        external_tools.runGappaGraft(outputJplacePath, tempDir, outputTreePath, fullyResolve = not Configs.exp).run()
+        if placement == "epa-ng":
+            external_tools.runEpaNg(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
+        else:
+            external_tools.runPplacer(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
+        Configs.log(f"grafting the insertions, fully resolve = {Configs.exp}")
+        external_tools.runGappaGraft(outputJplacePath, tempDir, outputTreePath, fullyResolve = Configs.exp).run()
     else:
         shutil.copy(bb_tree, outputTreePath)
     # now we have an alignment over, run epa-ng
