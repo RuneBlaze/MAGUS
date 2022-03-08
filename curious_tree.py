@@ -26,8 +26,8 @@ def estimate_tree(input, output):
         t.taskArgs["workingDir"] = alignDir
         t.run()
 
-    fullPath = output + ".full"
-    notFullPath = output + ".nf"
+    fullPath = output + ".full.fa"
+    notFullPath = output + ".nf.fa"
     if not os.path.exists(alignDir):
         os.mkdir(alignDir)
     SeqIO.write(fulllength, fullPath, "fasta")
