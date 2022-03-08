@@ -100,12 +100,16 @@ def runFastTree(fastaFilePath, workingDir, outputPath, mode = "normal", intree =
     if intree is not None:
         args.extend(["-intree", intree])
     
-    if mode == "fast":
-        args.extend(["-fastest", "-nosupport"]) 
-    elif mode == "faster":
-        args.extend(["-fastest", "-nosupport", "-mlnni", "4" ]) 
-    elif mode == "noml":
-        args.extend(["-fastest", "-nosupport", "-noml"])
+    # FIXME: this is a poor way to detect if we are using VeryFastTree
+    if "Very" not in Configs.fasttreePath:
+        if mode == "fast":
+            args.extend(["-fastest", "-nosupport"]) 
+        elif mode == "faster":
+            args.extend(["-fastest", "-nosupport", "-mlnni", "4" ]) 
+        elif mode == "noml":
+            args.extend(["-fastest", "-nosupport", "-noml"])
+    else:
+        args.extend("-nosupport")
     
     args.extend([fastaFilePath, ">", tempPath])
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}

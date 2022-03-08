@@ -7,7 +7,7 @@ using Base.Filesystem
 using Logging
 pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
 MAGUS_PATH = joinpath(@__DIR__, "magus.py")
-FRAGMENTARY = false # temporary flag just for fun/sorrow/absurdity of life
+FRAGMENTARY = true # temporary flag just for fun/sorrow/absurdity of life
 function main()
     external_tools = pyimport("tools.external_tools")
     curious_tree = pyimport("curious_tree")

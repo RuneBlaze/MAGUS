@@ -1,7 +1,7 @@
 from Bio import AlignIO, SeqIO
 import argparse
 import os
-from tools.external_tools import runFastTree, runRaxmlEvaluate, runEpaNg, runGappaGraft
+from tools.external_tools import runFastTree, runOldRmEvaluate, runRaxmlEvaluate, runEpaNg, runGappaGraft, runPplacer
 
 
 def estimate_tree(input, output):
@@ -34,8 +34,8 @@ def estimate_tree(input, output):
     SeqIO.write(notfulllength, notFullPath, "fasta")
     fp = os.path.abspath(fullPath)
     consumeTask(runFastTree(os.path.abspath(fullPath), alignDir, os.path.abspath(fullPath + ".tre")))
-    consumeTask(runRaxmlEvaluate(os.path.abspath(fullPath), alignDir, fp + ".tre", os.path.abspath(fullPath + ".tre.eval")))
-    consumeTask(runEpaNg(os.path.abspath(fullPath), fp + ".tre.eval", os.path.abspath(notFullPath), alignDir, fp + ".jplace"))
+    consumeTask(runOldRmEvaluate(os.path.abspath(fullPath), alignDir, fp + ".tre", os.path.abspath(fullPath + ".tre.eval")))
+    consumeTask(runPplacer(os.path.abspath(fullPath), fp + ".tre.eval", os.path.abspath(notFullPath), alignDir, fp + ".jplace"))
     consumeTask(runGappaGraft(fp + ".jplace", alignDir, os.path.abspath(output)))
 
 if __name__ == '__main__':
