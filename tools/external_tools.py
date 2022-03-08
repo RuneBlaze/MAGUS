@@ -109,7 +109,7 @@ def runFastTree(fastaFilePath, workingDir, outputPath, mode = "normal", intree =
         elif mode == "noml":
             args.extend(["-fastest", "-nosupport", "-noml"])
     else:
-        args.extend(["-nosupport"])
+        args.extend(["-nosupport", "-threads", str(Configs.numCores), '-double-precision'])
     
     args.extend([fastaFilePath, ">", tempPath])
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
