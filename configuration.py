@@ -79,6 +79,7 @@ class Configs:
     hmmsearchPath = which("hmmsearch") or relative_to_me("tools/hmmer/hmmsearch")
     fasttreePath = which("VeryFastTree") or which("FastTreeMP") or relative_to_me("tools/fasttree/FastTreeMP") or which("FastTree")
     raxmlPath = which("raxml-ng") or relative_to_me("tools/raxmlng/raxml-ng")
+    fafftPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fafft.py")
     
     logPath = None
     errorPath = None

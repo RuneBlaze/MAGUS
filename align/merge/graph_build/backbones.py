@@ -31,7 +31,7 @@ def requestMafftBackbones(context):
             context.backboneExtend.add(alignedFile)
     assignBackboneTaxa(context, missingBackboneFiles)
     for unalignedFile, alignedFile in missingBackboneFiles.items():
-        backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile)
+        backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile, useFafft=Configs.fragAlignForBb)
         context.backboneTasks.append(backboneTask)
     
     if not Configs.graphBuildHmmExtend:
@@ -65,12 +65,8 @@ def assignBackboneTaxa(context, missingBackbones):
             return 'S'
         return 'L'
     def eligible_oracle5(b, s):
-        if b >= 0.75:
-            if s >= 0.5:
-                return 'S'
-        elif b >= 0.5:
-            if s >= 0.5:
-                return 'M'
+        if s >= 0.67:
+            return 'S'
         return 'L'
     def eligible_oracle6(b, s):
         if b >= 0.5:

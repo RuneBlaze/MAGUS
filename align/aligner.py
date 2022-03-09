@@ -76,7 +76,7 @@ def alignSubsets(context):
              
         elif len(subset) <= mafftThreshold or not Configs.recurse:
             Configs.log("Subset has {}/{} sequences, aligning with MAFFT..".format(len(subset), mafftThreshold))            
-            subalignmentTask = external_tools.buildMafftAlignment(file, subalignmentPath)
+            subalignmentTask = external_tools.buildMafftAlignment(file, subalignmentPath, useFafft=Configs.fragAlignForSubset)
             context.subalignmentTasks.append(subalignmentTask)
             
         else:

@@ -74,6 +74,7 @@ def requestBackboneTasks(context):
         context.backbonePaths.extend(context.subalignmentPaths)
 
 def requestMafftBackbones(context):
+    # Unused?
     numTaxa = max(1, int(Configs.mafftSize/len(context.subsetPaths)))
 
     for n in range(Configs.mafftRuns):

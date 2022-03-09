@@ -45,8 +45,11 @@ def buildMafftAlignments(inputOutputPathMap):
     tasks = [buildMafftAlignment(inputPath, outputPath) for inputPath, outputPath in inputOutputPathMap.items()]
     return tasks
     
-def buildMafftAlignment(inputPath, outputPath, subtablePath = None):
-    return runMafft(inputPath, subtablePath, Configs.workingDir, outputPath, Configs.numCores)                
+def buildMafftAlignment(inputPath, outputPath, subtablePath = None, useFafft = False):
+    if not useFafft:
+        return runMafft(inputPath, subtablePath, Configs.workingDir, outputPath, Configs.numCores)      
+    else:
+        return runFafft(inputPath, subtablePath, Configs.workingDir, outputPath, Configs.numCores)          
 
 def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
@@ -58,6 +61,18 @@ def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
+def runFafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
+    tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
+    if not Configs.targetLength:
+        Configs.error("Target length not set")
+        exit()
+    assert not subtablePath
+    args = ["python3", Configs.fafftPath]
+    args.extend(["-i", fastaPath, "-w", workingDir, "-t", str(threads)])
+    args.extend(["-o", tempPath, "-l", str(Configs.targetLength)])
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
 def runMafftAdd(existingAlnP, newSeqP, workingDir, outputPath, threads = 1, frag = False):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
     args = [Configs.mafftPath]
@@ -65,7 +80,7 @@ def runMafftAdd(existingAlnP, newSeqP, workingDir, outputPath, threads = 1, frag
         args.extend(["--auto", "--addfragments", newSeqP])
     else:
         args.extend(["--add", newSeqP])
-    args.extend(["--keeplength", "--quiet"])
+    args.extend(["--keeplength", "--quiet","--anysymbol"])
     args.extend(["--thread", str(threads)])
     args.extend([existingAlnP, ">", tempPath])
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
