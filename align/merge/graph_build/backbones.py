@@ -57,9 +57,7 @@ def assignBackboneTaxa(context, missingBackbones):
                 return 'S'
         return 'L'
     def eligible_oracle3(b, s):
-        if b >= 0.5:
-            return 'M'
-        return 'L'
+        return 'M'
     def eligible_oracle4(b, s):
         if b >= 0.5:
             return 'S'
