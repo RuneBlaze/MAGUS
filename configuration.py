@@ -91,6 +91,11 @@ class Configs:
 
     outputInitialAlignment = None
     onlyInitialAln = False
+
+    noHmmForInitialTree = False
+    fragAlignForSubset = False
+    fragAlignForBb = False
+    noHmmForBbExtend = False
     
     @staticmethod
     def log(msg, path = None):
@@ -218,3 +223,8 @@ def buildConfigs(args):
     Configs.allowLossyCompression = args.allowlossycompression.lower() == "true"
     Configs.outputInitialAlignment = args.initialAln
     Configs.onlyInitialAln = args.onlyInitialAln
+
+    Configs.noHmmForInitialTree = args.nohmmforinitialtree
+    Configs.fragAlignForSubset = args.fragalignforsubset
+    Configs.fragAlignForBb = args.fragalignforbb
+    Configs.noHmmForBbExtend = args.nohmmforbbextend

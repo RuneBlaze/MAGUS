@@ -50,9 +50,9 @@ class Task:
         self.submitTask()
         self.awaitTask()
         
-    def run(self):
+    def run(self, overwriteOutput = False):
         try:
-            if not os.path.exists(self.outputFile):
+            if not os.path.exists(self.outputFile) or overwriteOutput:
                 Configs.log("Running a task, output file: {}".format(self.outputFile))
                 mod = importlib.import_module(Task.functionModuleMap[self.taskType])
                 func = getattr(mod, self.taskType)

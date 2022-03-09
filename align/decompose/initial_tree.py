@@ -157,15 +157,21 @@ def placementPipeline(sequences, tempDir, skeletonSize, initialAlignSize, output
         Configs.graphBuildStrategy = gbs
     else:
         external_tools.runMafft(skeletonPath, None, tempDir, outputAlignPath, Configs.numCores).run()
+    
     if len(addTaxa) > 0:
-        addHmmPath = os.path.join(hmmDir, "add_hmm_model.txt")
         addQueriesPath = os.path.join(tempDir, "add_queries.txt")
         sequenceutils.writeFasta(sequences, addQueriesPath, addTaxa)
-        hmmutils.buildHmmOverAlignment(outputAlignPath, addHmmPath).run()
-        addHmmTasks = hmmutils.hmmAlignQueries(addHmmPath, addQueriesPath)
-        task.submitTasks(addHmmTasks)
-        for addHmmTask in task.asCompleted(addHmmTasks):
-            hmmutils.mergeHmmAlignments([addHmmTask.outputFile], outputAlignPath, includeInsertions=False)
+        if Configs.noHmmForInitialTree:
+            t = external_tools.runMafftAdd(outputAlignPath, addQueriesPath, tempDir, outputAlignPath,
+            threads=Configs.numCores, frag = False)
+            t.run(overwriteOutput=True)
+        else:
+            addHmmPath = os.path.join(hmmDir, "add_hmm_model.txt")
+            hmmutils.buildHmmOverAlignment(outputAlignPath, addHmmPath).run()
+            addHmmTasks = hmmutils.hmmAlignQueries(addHmmPath, addQueriesPath)
+            task.submitTasks(addHmmTasks)
+            for addHmmTask in task.asCompleted(addHmmTasks):
+                hmmutils.mergeHmmAlignments([addHmmTask.outputFile], outputAlignPath, includeInsertions=False)
     # build an initial tree on the skeleton alignment, called the bb_tree
     external_tools.runFastTree(outputAlignPath, tempDir, bb_unopt_tree).run()
     if placement == "epa-ng":
@@ -175,19 +181,24 @@ def placementPipeline(sequences, tempDir, skeletonSize, initialAlignSize, output
         external_tools.runOldRmEvaluate(outputAlignPath, tempDir, bb_unopt_tree, bb_tree).run()
     if len(remainingTaxa) > 0:
         sequenceutils.writeFasta(sequences, queriesPath, remainingTaxa)    
-        if len(addTaxa) <= 0:
-            hmmutils.buildHmmOverAlignment(outputAlignPath, hmmPath).run()
+        if Configs.noHmmForInitialTree:
+            combined_path = os.path.join(tempDir, "combined_path.fa")
+            t = external_tools.runMafftAdd(outputAlignPath, queriesPath, tempDir, combined_path, threads=Configs.numCores, frag = True)
+            t.run()
+            external_tools.splitAlignment(outputAlignPath, combined_path, tempDir, outputAlignPath, rest_path).run()
         else:
-            hmmPath = addHmmPath
-        hmmTasks = hmmutils.hmmAlignQueries(hmmPath, queriesPath)
-        task.submitTasks(hmmTasks)
-        for hmmTask in task.asCompleted(hmmTasks):
-            hmmutils.mergeHmmAlignments([hmmTask.outputFile], rest_path, includeInsertions=False)
+            if len(addTaxa) <= 0:
+                hmmutils.buildHmmOverAlignment(outputAlignPath, hmmPath).run()
+            else:
+                hmmPath = addHmmPath
+            hmmTasks = hmmutils.hmmAlignQueries(hmmPath, queriesPath)
+            task.submitTasks(hmmTasks)
+            for hmmTask in task.asCompleted(hmmTasks):
+                hmmutils.mergeHmmAlignments([hmmTask.outputFile], rest_path, includeInsertions=False)
         if placement == "epa-ng":
             external_tools.runEpaNg(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
         else:
             external_tools.runPplacer(outputAlignPath, bb_tree, rest_path, tempDir, outputJplacePath).run()
-        # Configs.log(f"grafting the insertions, fully resolve = {Configs.exp}")
         external_tools.runGappaGraft(outputJplacePath, tempDir, outputTreePath, fullyResolve = False).run()
     else:
         shutil.copy(bb_tree, outputTreePath)

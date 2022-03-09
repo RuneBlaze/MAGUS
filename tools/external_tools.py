@@ -24,6 +24,9 @@ def runCommand(**kwargs):
         Configs.error("Output: {}".format(runner.stdout))
         raise
     for srcPath, destPath in kwargs.get("fileCopyMap", {}).items():
+        if os.path.isfile(destPath):
+            Configs.log("Removing existing file: {}".format(destPath))
+            os.remove(destPath)
         shutil.move(srcPath, destPath)
 
 def runClustalOmegaGuideTree(fastaPath, workingDir, outputPath, threads = 1):
@@ -54,6 +57,28 @@ def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     args.extend([fastaPath, ">", tempPath])
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
+def runMafftAdd(existingAlnP, newSeqP, workingDir, outputPath, threads = 1, frag = False):
+    tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
+    args = [Configs.mafftPath, "--auto"]
+    if frag:
+        args.extend(["--addfragments", newSeqP])
+    else:
+        args.extend(["--add", newSeqP])
+    args.extend(["--keeplength", "--quiet"])
+    args.extend(["--thread", str(threads)])
+    args.extend([existingAlnP, ">", tempPath])
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
+def splitAlignment(existingAlnP, combinedAlnP, workingDir, outputRefPath, outputQueryPath):
+    args = ['epa-ng']
+    args.extend(["--split", existingAlnP, combinedAlnP])
+    args.extend(["-w", workingDir])
+    refPath = os.path.join(workingDir, "reference.fasta")
+    queryPath = os.path.join(workingDir, "query.fasta")
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {refPath : outputRefPath, queryPath: outputQueryPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputQueryPath, taskArgs = taskArgs)
 
 def runMafftGuideTree(fastaPath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
