@@ -60,9 +60,9 @@ def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
 
 def runMafftAdd(existingAlnP, newSeqP, workingDir, outputPath, threads = 1, frag = False):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
-    args = [Configs.mafftPath, "--auto"]
+    args = [Configs.mafftPath]
     if frag:
-        args.extend(["--addfragments", newSeqP])
+        args.extend(["--auto", "--addfragments", newSeqP])
     else:
         args.extend(["--add", newSeqP])
     args.extend(["--keeplength", "--quiet"])
