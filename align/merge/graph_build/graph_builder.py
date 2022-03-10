@@ -59,13 +59,11 @@ def requestBackboneTasks(context):
         Configs.log("Using {} HMM-extended subalignments as backbone files..".format(len(context.subalignmentPaths)))
         context.backbonePaths = context.subalignmentPaths
         context.backboneExtend.update(context.backbonePaths)
-        
-    elif Configs.graphBuildStrategy == "initial":
-        Configs.log("Using the initial decomposition alignment as the single backbone..")
-        initialAlignPath = os.path.join(context.workingDir, "decomposition", "initial_tree", "initial_align.txt")
-        context.backbonePaths = [initialAlignPath]
-    
     else:
+        if Configs.graphBuildStrategy == "initial":
+            Configs.log("Adding the initial decomposition alignment as the single backbone..")
+            initialAlignPath = os.path.join(context.workingDir, "decomposition", "initial_tree", "initial_align.txt")
+            context.backbonePaths.append(initialAlignPath)
         Configs.log("Using {} MAFFT backbones..".format(Configs.mafftRuns)) 
         Configs.log(f"The graph build strategy is {Configs.graphBuildStrategy}")
         backbones.requestMafftBackbones(context)
