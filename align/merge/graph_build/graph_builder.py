@@ -62,7 +62,7 @@ def requestBackboneTasks(context):
         
     elif Configs.graphBuildStrategy == "initial":
         Configs.log("Using the initial decomposition alignment as the single backbone..")
-        initialAlignPath = os.path.join(context.workingDir, "decomposition", "initial_tree", "initial_insert_align.txt")
+        initialAlignPath = os.path.join(context.workingDir, "decomposition", "initial_tree", "initial_align.txt")
         context.backbonePaths = [initialAlignPath]
     
     else:
