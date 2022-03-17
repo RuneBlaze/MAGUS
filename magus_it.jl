@@ -19,6 +19,7 @@ function main()
     magus_args = copy(ARGS)
     its_ix = -1
     its_times = -1
+    frag_ix = -1
     for (j, i) = enumerate(magus_args)
         if i == "-o"
             output_ix = j
@@ -32,8 +33,17 @@ function main()
             its_ix = j
             its_times = parse(Int, magus_args[j+1])
         end
+        if i == "--frag"
+            frag_ix = j
+        end
     end
-    deleteat!(magus_args, sort([output_ix, output_ix+1,dir_ix, dir_ix + 1, its_ix, its_ix + 1]))
+    if frag_ix > 0
+        deleteat!(magus_args, sort([output_ix, output_ix+1,dir_ix, dir_ix + 1, its_ix, its_ix + 1, frag_ix]))
+        frag_est = true
+    else
+        deleteat!(magus_args, sort([output_ix, output_ix+1,dir_ix, dir_ix + 1, its_ix, its_ix + 1]))
+        frag_est = false
+    end
     @info "Running MAGUS with total iterations: $(its_times)"
     @assert its_times > 1
     # we now have the output path, and the rest of the arguments.
@@ -46,7 +56,7 @@ function main()
         run(`python3 $(MAGUS_PATH) $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
         if i < its_times # if we are not at the last iteration
             # we estimate the tree
-            if FRAGMENTARY
+            if frag_est
                 @info "Running curious_tree estimator. I wish everything works...: $(output_filename) -> $(output_treename)"
                 curious_tree.estimate_tree(output_filename, output_treename)
             else
