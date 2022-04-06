@@ -7,7 +7,7 @@ using Base.Filesystem
 using Logging
 pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
 MAGUS_PATH = joinpath(@__DIR__, "magus.py")
-FRAGMENTARY = true # temporary flag just for fun/sorrow/absurdity of life
+
 function main()
     external_tools = pyimport("tools.external_tools")
     curious_tree = pyimport("curious_tree")
@@ -20,7 +20,11 @@ function main()
     its_ix = -1
     its_times = -1
     frag_ix = -1
+    target_length = 0.75
     for (j, i) = enumerate(magus_args)
+        if lowercase(i) == "median"
+            target_length = 0.5
+        end
         if i == "-o"
             output_ix = j
             output_path = magus_args[j+1]
@@ -58,7 +62,7 @@ function main()
             # we estimate the tree
             if frag_est
                 @info "Running curious_tree estimator. I wish everything works...: $(output_filename) -> $(output_treename)"
-                curious_tree.estimate_tree(output_filename, output_treename)
+                curious_tree.estimate_tree(output_filename, output_treename, target_length)
             else
                 @info "Compressing alignment: $(output_filename) -> $(output_treename).compressed"
                 mask999.compress_alignment(output_filename, output_filename * ".compressed")
