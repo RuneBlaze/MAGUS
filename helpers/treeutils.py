@@ -8,6 +8,7 @@ import dendropy
 from dendropy.utility import bitprocessing
 from helpers import sequenceutils
 from configuration import Configs
+from foreign.sanity import build_MST
 
 import os
 import sys
@@ -71,10 +72,8 @@ def compareDendropyTrees(tr1, tr2):
     if com != lb1 or com != lb2:
         com = list(com)
         tns = dendropy.TaxonNamespace(com)
-
         tr1.retain_taxa_with_labels(com)
         tr1.migrate_taxon_namespace(tns)
-
         tr2.retain_taxa_with_labels(com)
         tr2.migrate_taxon_namespace(tns)
     com = list(com)
@@ -115,19 +114,28 @@ def decomposeGuideTree(
     for tree in trees:
         keep = [n.taxon.label for n in tree.leaf_nodes()]
         taxonSubsets.append(keep)
-    
+    # print("breaking!")
+    # import code; code.interact(local=dict(globals(), **locals()))
+
+    reGuideTree = dendropy.Tree.get(path=guideTreePath, schema="newick", preserve_underscores=True)
+    reGuideTree.collapse_basal_bifurcation()
+    T = build_MST(reGuideTree, taxonSubsets)
     subsetPaths = []
     for n, subset in enumerate(taxonSubsets):
         subsetPath = os.path.join(subsetsDir, "subset_{}.txt".format(n+1))
         subsetPaths.append(subsetPath)                    
         sequenceutils.writeFasta(sequences, subsetPath, subset) 
+    treepath = os.path.join(subsetsDir, "mst.tre")
+    T.write(path=treepath, schema="newick")
     return subsetPaths
+
+
 
 def decomposeTree(tree, maxSubsetSize, numSubsets):
     trees = [tree]
-    if Configs.emulatePasta: # FIXME: this is ugly
-        maxSubsetSize = 200
-        numSubsets = 1231231234
+    # if Configs.emulatePasta: # FIXME: this is ugly
+    #     maxSubsetSize = 200
+    #     numSubsets = 1231231234
     while len(trees) < numSubsets:
         largestTree = max(trees, key=lambda t : t.childs)
         

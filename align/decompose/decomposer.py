@@ -11,12 +11,19 @@ import time
 from align.decompose import initial_tree, kmh
 from helpers import treeutils, sequenceutils
 from configuration import Configs
+import treeswift as ts
 
 '''
 Handles the different ways to decompose the dataset into subsets.
 The main way is to estimate a guide tree, then use PASTA's centroid edge decomposition
 on the guide tree. Can also decompose randomly (for high speed on huge datasets).
 '''
+
+
+def loadMST(context):
+    subsetsDir = os.path.join(context.workingDir, "decomposition")
+    p = os.path.join(subsetsDir, "mst.tre")
+    context.MST = ts.read_tree_newick(p)
 
 def decomposeSequences(context):
     time1 = time.time()
@@ -42,6 +49,8 @@ def decomposeSequences(context):
         
         if len(context.subsetPaths) == 0:
             buildDecomposition(context, subsetsDir)
+        else:
+            loadMST(context)
     
     time2 = time.time()  
     Configs.log("Decomposed {} into {} subsets in {} sec..".format(context.sequencesPath, len(context.subsetPaths), time2-time1))
@@ -64,11 +73,10 @@ def buildDecomposition(context, subsetsDir):
         guideTreePath  = initial_tree.buildInitialTree(context, subsetsDir, context.guideTree)
         Configs.log("Using target subset size of {}, and maximum number of subsets {}..".format(Configs.decompositionMaxSubsetSize, Configs.decompositionMaxNumSubsets))
         weightSet = set([])
-        if Configs.decompositionStrategy == "noodle":
-            Configs.log("Total num. of full length sequences: {}".format(len(context.fullSequences)))
-            weightSet = context.fullSequences
-        context.subsetPaths = treeutils.decomposeGuideTree(subsetsDir, context.sequencesPath, guideTreePath, 
-                                                   Configs.decompositionMaxSubsetSize, Configs.decompositionMaxNumSubsets, weightSet)        
+        paths = treeutils.decomposeGuideTree(subsetsDir, context.sequencesPath, guideTreePath, 
+                                                   Configs.decompositionMaxSubsetSize, Configs.decompositionMaxNumSubsets, weightSet)
+        context.subsetPaths = paths
+        loadMST(context)
 
 def pasta_shim(n):
     return n.replace("_","").replace("/","").replace("-","").lower()

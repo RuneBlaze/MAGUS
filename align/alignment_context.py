@@ -28,6 +28,7 @@ class AlignmentContext:
         self.fragSequences = set([])
         self.backbonePaths = []
         self.guideTree = None
+        self.MST = None
         
         self.unalignedSequences = None
         #self.taxa = []

@@ -1,6 +1,9 @@
 # MAGUS
 Multiple Sequence Alignment using Graph Clustering
 
+Note that the parts that I added are now licensed under GPL-3, due to incorporation
+of some of the PASTA code.
+
 This is a personal fork of the original version,
 with code-name `MagusNight`. Here are some of the extensions:
 

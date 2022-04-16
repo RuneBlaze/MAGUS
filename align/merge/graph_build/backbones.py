@@ -17,8 +17,13 @@ import itertools
 
 
 def requestMafftBackbones(context):
-    missingBackboneFiles = {}    
-    for n in range(Configs.mafftRuns):
+    missingBackboneFiles = {}
+    numRuns = Configs.mafftRuns
+    strategy = Configs.graphBuildStrategy.lower()
+    if strategy.startswith("mst"):
+        k = int(strategy[3])
+        numRuns = (len(context.subsets) - 1) * k
+    for n in range(numRuns):
         unalignedFile = os.path.join(context.graph.workingDir, "backbone_{}_unalign.txt".format(n+1))
         alignedFile = os.path.join(context.graph.workingDir, "backbone_{}_mafft.txt".format(n+1))
         if os.path.exists(alignedFile):
@@ -47,6 +52,11 @@ def assignBackboneTaxa(context, missingBackbones):
     
     numTaxa = max(1, int(Configs.mafftSize/len(context.subsetPaths)))
     backbones = {file : {} for file in missingBackbones}
+
+    strat = Configs.graphBuildStrategy.lower()
+    if strat.startswith("mst"):
+        divider = 2 if strat[-1] == "-" else 1
+        buildBackbonesMST(context, backbones, numTaxa, divider)
 
     if Configs.graphBuildStrategy.lower() == "eligible":
         buildBackbonesEligible(context, backbones, numTaxa)
@@ -141,10 +151,38 @@ def assignBackboneTaxa(context, missingBackbones):
 def buildBackbonesRandom(context, backbones, numTaxa):
     Configs.log("Preparing {} backbones with {} RANDOM sequences per subset..".format(len(backbones), numTaxa))
     for file, backbone in backbones.items():
+        if backbone:
+            continue
         for subset in context.subsets:
             random.shuffle(subset)
             for taxon in subset[:numTaxa]:
                 backbone[taxon] = context.unalignedSequences[taxon]       
+
+def buildBackbonesMST(context, backbones, numTaxa, divider = 1):
+    edges = []
+    for n in context.MST.traverse_postorder():
+        if n.is_root():
+            continue
+        if not n.label:
+            assert False
+        edges.append((int(n.label)-1, int(n.parent.label)-1))
+    mst_num = len(backbones) // divider
+    for i, (_, backbone) in enumerate(backbones.items()):
+        if i >= mst_num:
+            continue
+        e_ix = i % len(edges) # which edge we are currently during
+        u, v = edges[e_ix]
+        m = Configs.mafftSize
+        random.shuffle(context.subsets[u])
+        random.shuffle(context.subsets[v])
+        subset_a = context.subsets[u][:(m // 2)]
+        subset_b = context.subsets[v][:(m // 2)]
+        for taxon in subset_a:
+            backbone[taxon] = context.unalignedSequences[taxon]
+        for taxon in subset_b:
+            backbone[taxon] = context.unalignedSequences[taxon]
+    buildBackbonesRandom(context, backbones, numTaxa)
+    
 
 def buildBackbonesEligible(context, backbones, numTaxa, oracle = lambda a, b: 'L'):
     sequences = context.unalignedSequences
