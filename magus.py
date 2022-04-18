@@ -99,7 +99,8 @@ def parseArgs():
     parser.add_argument("--fragalignforsubset", action="store_true") # use mafft add for aligning the subsets
     parser.add_argument("--fragalignforbb", action="store_true") # use mafft add for aligning the backbone
     parser.add_argument("--nohmmforbbextend", action="store_true") # use mafft add for extending all backbones
-    
+    parser.add_argument("--newMafft", action="store_true") # use new mafft ep 0 option
+
     parser.add_argument("--graphbuildstrategy", type=str,
                         help="Strategy for choosing backbone sequences (random, longest, longestrandom, coverage)",
                         required=False, default="random")

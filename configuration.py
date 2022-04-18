@@ -55,6 +55,8 @@ class Configs:
     graphTraceMethod = "minclusters"
     graphTraceOptimize = False
 
+    newMafft = False
+
     # useJulia = False
     
     mafftRuns = 10
@@ -212,6 +214,8 @@ def buildConfigs(args):
     Configs.skeletonSeqs = args.skeleton
     # Configs.upgmaNoNormalize = args.noNormalize
     Configs.graphTransformMethod = args.transform
+
+    Configs.newMafft = args.newMafft
 
     Configs.emulatePasta = args.p0
 

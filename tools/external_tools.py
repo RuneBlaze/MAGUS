@@ -53,7 +53,10 @@ def buildMafftAlignment(inputPath, outputPath, subtablePath = None, useFafft = F
 
 def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
-    args = [Configs.mafftPath, "--localpair", "--maxiterate", "1000", "--ep", "0.123", 
+    ep = "0.123"
+    if Configs.newMafft:
+        ep = "0"
+    args = [Configs.mafftPath, "--localpair", "--maxiterate", "1000", "--ep", ep, 
             "--quiet", "--thread", str(threads), "--anysymbol"]
     if subtablePath is not None:
         args.extend(["--merge", subtablePath])
