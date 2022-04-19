@@ -64,8 +64,8 @@ for arg in ARGS
         subset_alignment_pattern = joinpath(subset_path, "subalignment_subset_*.txt")
         graph_alignment_pattern = joinpath(graph_path, "backbone_*_mafft.txt")
         tokens = splitpath(p)
-        dataset = tokens[1]
-        rep = tokens[2]
+        dataset = tokens[2]
+        rep = tokens[3]
         true_aln_path = joinpath(dataset, rep, TRUE_ALN_FILENAME)
         for sa = glob(subset_alignment_pattern)
             push!(tasks, Task(p, true_aln_path, sa, 1))
