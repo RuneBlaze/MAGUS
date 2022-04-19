@@ -36,7 +36,12 @@ def requestMafftBackbones(context):
             context.backboneExtend.add(alignedFile)
     assignBackboneTaxa(context, missingBackboneFiles)
     for unalignedFile, alignedFile in missingBackboneFiles.items():
-        backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile, useFafft=Configs.fragAlignForBb)
+        if Configs.graphBuildMethod == "mafft":
+            backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile, useFafft=Configs.fragAlignForBb)
+        elif Configs.graphBuildMethod == "magus":
+            backboneTask = external_tools.runMyself(unalignedFile, os.path.join(alignedFile + "_env"), alignedFile, None)
+        else:
+            assert False
         context.backboneTasks.append(backboneTask)
     
     if not Configs.graphBuildHmmExtend:

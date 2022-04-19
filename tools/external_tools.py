@@ -11,6 +11,8 @@ import shutil
 from configuration import Configs
 from tasks.task import Task
 from helpers.translate_raxml import translate_raxml
+import pathlib
+from pathlib import Path
 
 def runCommand(**kwargs):
     command = kwargs["command"]
@@ -64,12 +66,14 @@ def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
-def runMyself(fastaPath, workingDir, outputPath, guideTree, threads = 1):
-    # tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
-    args = {"workingDir" : workingDir, "outputFile" : outputPath,
-            "subalignmentPaths" : Configs.subalignmentPaths, "sequencesPath" : fastaPath,
-            "backbonePaths" : Configs.backbonePaths, "guideTree" : guideTree}
-    task = createAlignmentTask(args)
+def runMyself(fastaPath, workingDir, outputPath, guideTree):
+    # FIXME: this is really a hack
+    magusPath = os.path.join(pathlib.Path(__file__).parent.parent.resolve(), "magus.py")
+    tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
+    Path(workingDir).mkdir(parents=True, exist_ok=True)
+    args = ["python3", magusPath, "-i", fastaPath, "-d", workingDir, "-o", tempPath, "-np", str(Configs.numCores)]
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : os.getcwd()}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
 def runFafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
