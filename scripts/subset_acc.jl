@@ -5,12 +5,12 @@ using Distributed
 # pattern = ARGS[1]
 # @assert !isempty(pattern)
 
-WORKERS = 15
-if Sys.isapple()
-    WORKERS = 1
-end
+# WORKERS = 15
+# if Sys.isapple()
+#     WORKERS = 1
+# end
 
-addprocs(WORKERS)
+# addprocs(WORKERS)
 
 @everywhere TRUE_ALN_FILENAME = "true.indel.fa"
 # @everywhere TRUE_ALN_FILENAME = "truealign.hf.txt"
@@ -79,7 +79,7 @@ end
 @show tasks
 # @show isempty(tasks)
 
-results = pmap(execute_task, tasks)
+results = map(execute_task, tasks)
 println("inputpath,type,ref,error,spfp,spfn")
 for r in results
     println(join(r, ","))
