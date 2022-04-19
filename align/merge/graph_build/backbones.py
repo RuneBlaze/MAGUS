@@ -49,7 +49,9 @@ def requestMafftBackbones(context):
             backbone = sequenceutils.readFromFasta(file)
             context.backboneTaxa.update(backbone)        
             
-    task.submitTasks(context.backboneTasks)    
+    task.submitTasks(context.backboneTasks)
+    for hmmTask in task.asCompleted(context.backboneTasks):  
+        print("hello!")  
     
 def assignBackboneTaxa(context, missingBackbones):
     if len(missingBackbones) == 0:
