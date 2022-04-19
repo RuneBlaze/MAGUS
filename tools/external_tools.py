@@ -64,6 +64,13 @@ def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
+def runMyself(fastaPath, workingDir, outputPath, guideTree, threads = 1):
+    # tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
+    args = {"workingDir" : workingDir, "outputFile" : outputPath,
+            "subalignmentPaths" : Configs.subalignmentPaths, "sequencesPath" : fastaPath,
+            "backbonePaths" : Configs.backbonePaths, "guideTree" : guideTree}
+    task = createAlignmentTask(args)
+
 def runFafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
     if not Configs.targetLength:

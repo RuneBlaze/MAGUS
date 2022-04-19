@@ -51,7 +51,7 @@ end
 
 @everywhere function execute_task(task :: Task)
     rates = obtain_rates(task.ref, task.estimated)
-    return [task.envpath, task.type, (rates.spfp + rates.spfn)/2, rates.spfp, rates.spfn]
+    return [task.estimated, task.type, (rates.spfp + rates.spfn)/2, rates.spfp, rates.spfn]
 end
 
 
