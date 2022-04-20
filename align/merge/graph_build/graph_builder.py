@@ -34,14 +34,14 @@ def buildGraph(context):
         Configs.log("Found existing graph file {}".format(context.graph.graphPath))
     else:
         requestBackboneTasks(context)
-    
+    Configs.log("Starting to wait for subalignment tasks to complete..")
     context.awaitSubalignments()
-    if Configs.oriGraphBuildMethod != "mafft":
-        Configs.log("Not using MAFFT for the backbones, hence getting the backbones serially.")
-        Configs.oriGraphBuildMethod = "mafft"
-        for i, t in enumerate(context.backboneTasks):
-            Configs.log("Waiting for backbone {} to complete..".format(i+1))
-            t.run()
+    Configs.log("Finished waiting for subalignment tasks to complete..")
+    Configs.oriGraphBuildMethod = "mafft"
+    Configs.graphBuildMethod = "mafft"
+    for i, t in enumerate(context.backboneTasks):
+        Configs.log("Waiting for backbone {} to complete..".format(i+1))
+        t.run()
     context.graph.initializeMatrix()
     
     if os.path.exists(context.graph.graphPath):
@@ -101,7 +101,7 @@ def requestMafftBackbones(context):
                 
 def buildMatrix(context):
     addedBackbones = set()
-    for backboneTask in task.asCompleted(context.backboneTasks):
+    for backboneTask in context.backboneTasks:
         addAlignmentFileToGraph(context, backboneTask.outputFile)
         addedBackbones.add(backboneTask.outputFile)
     

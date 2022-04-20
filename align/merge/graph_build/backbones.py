@@ -51,9 +51,9 @@ def requestMafftBackbones(context):
             backbone = sequenceutils.readFromFasta(file)
             context.backboneTaxa.update(backbone)        
 
-    if Configs.oriGraphBuildMethod == "mafft":
-        Configs.log("Running {} backbone alignment tasks using MAFFT..".format(len(context.backboneTasks)))
-        task.submitTasks(context.backboneTasks)
+    # if Configs.oriGraphBuildMethod == "mafft":
+    #     Configs.log("Running {} backbone alignment tasks using MAFFT..".format(len(context.backboneTasks)))
+    #     task.submitTasks(context.backboneTasks)
     # for hmmTask in task.asCompleted(context.backboneTasks):  
     #     print("hello!") 
     
