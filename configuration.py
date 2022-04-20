@@ -46,6 +46,7 @@ class Configs:
     #decompositionKmhIterations = 1
     
     graphBuildMethod = "mafft"
+    oriGraphBuildMethod = "mafft"
     graphBuildHmmExtend = False
     graphBuildRestrict = False
     graphTransformMethod = None
@@ -184,6 +185,8 @@ def buildConfigs(args):
     Configs.dataType = args.datatype
     
     Configs.graphBuildMethod = args.graphbuildmethod
+    # FIXME: ugly hack
+    Configs.oriGraphBuildMethod = args.graphbuildmethod
     Configs.graphBuildHmmExtend = args.graphbuildhmmextend.lower() == "true"
     Configs.graphBuildRestrict = args.graphbuildrestrict.lower() == "true"
     Configs.graphBuildStrategy = args.graphbuildstrategy

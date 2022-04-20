@@ -36,6 +36,12 @@ def buildGraph(context):
         requestBackboneTasks(context)
     
     context.awaitSubalignments()
+    if Configs.oriGraphBuildMethod != "mafft":
+        Configs.log("Not using MAFFT for the backbones, hence getting the backbones serially.")
+        Configs.oriGraphBuildMethod = "mafft"
+        for i, t in enumerate(context.backboneTasks):
+            Configs.log("Waiting for backbone {} to complete..".format(i+1))
+            t.run()
     context.graph.initializeMatrix()
     
     if os.path.exists(context.graph.graphPath):
