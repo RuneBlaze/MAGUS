@@ -4,6 +4,10 @@ using DataFrames
 
 set_scheduler_max_mem()
 scheduler_start()
+while scheduler_status(verbose=false) == :not_running
+    @info "waiting for scheduler to properly start"
+    sleep(1)
+end
 scheduler_status()
 if Sys.islinux()
     C = Threads.nthreads() - 1
