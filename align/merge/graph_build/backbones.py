@@ -113,7 +113,7 @@ def assignBackboneTaxa(context, missingBackbones):
         return 'L'
     
     gbs = Configs.graphBuildStrategy.lower()
-    if len(gbs) == len("eligibleX"):
+    if gbs.startswith("eligible") and len(gbs) == len("eligibleX"):
         variant = int(gbs[-1])
         oracle = {
             2: eligible_oracle2,
