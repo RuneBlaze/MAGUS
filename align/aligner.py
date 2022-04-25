@@ -14,6 +14,7 @@ from tools import external_tools
 from configuration import Configs
 from helpers import sequenceutils
 from tasks import task
+import time
 
 '''
 Alignments are treated as "tasks", units of work that are written out to task files and 
@@ -65,7 +66,9 @@ def alignSubsets(context):
         os.makedirs(subalignDir)
         
     mafftThreshold = max(Configs.mafftSize, Configs.decompositionMaxSubsetSize, Configs.recurseThreshold)
-    
+    from align.merge.magus_night import MagusNight
+    # MagusNight.init_scheduler()
+    # time.sleep(1)
     for file in context.subsetPaths:
         subset = sequenceutils.readFromFasta(file)
         subalignmentPath = os.path.join(subalignDir, "subalignment_{}".format(os.path.basename(file)))
@@ -75,10 +78,10 @@ def alignSubsets(context):
             Configs.log("Existing subalignment file detected: {}".format(subalignmentPath))       
              
         elif len(subset) <= mafftThreshold or not Configs.recurse:
-            Configs.log("Subset has {}/{} sequences, aligning with MAFFT..".format(len(subset), mafftThreshold))            
-            subalignmentTask = external_tools.buildMafftAlignment(file, subalignmentPath, useFafft=Configs.fragAlignForSubset)
-            context.subalignmentTasks.append(subalignmentTask)
-            
+            Configs.log("Subset has {}/{} sequences, aligning with MAFFT..".format(len(subset), mafftThreshold))   
+            MagusNight.request_constraint(file, subalignmentPath)    
+            # subalignmentTask = external_tools.buildMafftAlignment(file, subalignmentPath, useFafft=Configs.fragAlignForSubset)
+            # context.subalignmentTasks.append(subalignmentTask)
         else:
             Configs.log("Subset has {}/{} sequences, recursively subaligning with MAGUS..".format(len(subset), mafftThreshold))
             subalignmentDir = os.path.join(subalignDir, os.path.splitext(os.path.basename(subalignmentPath))[0])
@@ -86,6 +89,6 @@ def alignSubsets(context):
                                                     "sequencesPath" : file, "guideTree" : Configs.recurseGuideTree})   
             context.subalignmentTasks.append(subalignmentTask)
                 
-    task.submitTasks(context.subalignmentTasks)
-    Configs.log("Prepared {} subset alignment tasks..".format(len(context.subalignmentTasks)))
+    # task.submitTasks(context.subalignmentTasks)
+    # Configs.log("Prepared {} subset alignment tasks..".format(len(context.subalignmentTasks)))
 

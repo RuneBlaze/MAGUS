@@ -4,7 +4,7 @@ using SparseArrays
 using Base.Filesystem
 using DataStructures
 include("Clusterings.jl")
-
+include("MafftQueue.jl")
 include("Filtering.jl")
 
 mutable struct AlnContext
@@ -696,4 +696,8 @@ export find_clusters, upgma_naive_clustering
 export rwr_normalize_graph, elementary_digraph_stats, dump_graph_to_file
 export apply_transformation
 export debug_print_mapped_graph
+export request_constraint, request_backbone, check_constraints_finished, check_backbones_finished, everything_finished
+export init_scheduler
+export scheduler_start
+export wait_for_everything
 end

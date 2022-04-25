@@ -35,13 +35,17 @@ def buildGraph(context):
     else:
         requestBackboneTasks(context)
     Configs.log("Starting to wait for subalignment tasks to complete..")
-    context.awaitSubalignments()
-    Configs.log("Finished waiting for subalignment tasks to complete..")
+    # context.awaitSubalignments()
+    from align.merge.magus_night import MagusNight
+    
     Configs.oriGraphBuildMethod = "mafft"
     Configs.graphBuildMethod = "mafft"
-    for i, t in enumerate(context.backboneTasks):
-        Configs.log("Waiting for backbone {} to complete..".format(i+1))
-        t.run()
+    MagusNight.wait_for_everything()
+    # a, b = MagusNight.everything_finished()
+    # while a + b > 0:
+    #     print(f"{(a, b)} tasks running and queuing")
+    #     time.sleep(5)
+    Configs.log("Finished waiting for subalignment tasks to complete..")
     context.graph.initializeMatrix()
     
     if os.path.exists(context.graph.graphPath):
