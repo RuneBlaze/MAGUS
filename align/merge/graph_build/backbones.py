@@ -25,7 +25,7 @@ def requestMafftBackbones(context):
         numRuns = (len(context.subsets) - 1) * k
     if strategy.startswith("allpairs"):
         k = int(strategy[-1])
-        numRuns = len(context.subsets) * (len(context.subsets) - 1) / 2 * k
+        numRuns = len(context.subsets) * (len(context.subsets) - 1) // 2 * k
     for n in range(numRuns):
         unalignedFile = os.path.join(context.graph.workingDir, "backbone_{}_unalign.txt".format(n+1))
         alignedFile = os.path.join(context.graph.workingDir, "backbone_{}_mafft.txt".format(n+1))
