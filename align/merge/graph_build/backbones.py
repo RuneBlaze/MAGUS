@@ -23,6 +23,9 @@ def requestMafftBackbones(context):
     if strategy.startswith("mst"):
         k = int(strategy[3])
         numRuns = (len(context.subsets) - 1) * k
+    if strategy.startswith("allpairs"):
+        k = int(strategy[-1])
+        numRuns = len(context.subsets) * (len(context.subsets) - 1) / 2 * k
     for n in range(numRuns):
         unalignedFile = os.path.join(context.graph.workingDir, "backbone_{}_unalign.txt".format(n+1))
         alignedFile = os.path.join(context.graph.workingDir, "backbone_{}_mafft.txt".format(n+1))
@@ -70,7 +73,8 @@ def assignBackboneTaxa(context, missingBackbones):
     if strat.startswith("mst"):
         divider = 2 if strat[-1] == "-" else 1
         buildBackbonesMST(context, backbones, numTaxa, divider)
-
+    elif strat.startswith("allpairs"):
+        buildBackbonesAllPairs(context, backbones)
     if Configs.graphBuildStrategy.lower() == "eligible":
         buildBackbonesEligible(context, backbones, numTaxa)
     
@@ -195,7 +199,29 @@ def buildBackbonesMST(context, backbones, numTaxa, divider = 1):
         for taxon in subset_b:
             backbone[taxon] = context.unalignedSequences[taxon]
     buildBackbonesRandom(context, backbones, numTaxa)
-    
+
+def buildBackbonesAllPairs(context, backbones):
+    from itertools import combinations
+    subsets = set([])
+    for n in context.MST.traverse_postorder():
+        if n.is_root():
+            continue
+        if not n.label:
+            assert False
+        subsets.add(int(n.label)-1)
+        subsets.add(int(n.parent.label)-1)
+    subsets = list(subsets)
+    for i, ((_, backbone), (u, v)) in enumerate(zip(backbones.items(), combinations(subsets, 2))):
+        # u, v: subset indices
+        m = Configs.mafftSize
+        random.shuffle(context.subsets[u])
+        random.shuffle(context.subsets[v])
+        subset_a = context.subsets[u][:(m // 2)]
+        subset_b = context.subsets[v][:(m // 2)]
+        for taxon in subset_a:
+            backbone[taxon] = context.unalignedSequences[taxon]
+        for taxon in subset_b:
+            backbone[taxon] = context.unalignedSequences[taxon]
 
 def buildBackbonesEligible(context, backbones, numTaxa, oracle = lambda a, b: 'L'):
     sequences = context.unalignedSequences
