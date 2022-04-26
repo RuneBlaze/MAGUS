@@ -54,15 +54,15 @@ end
     return [task.estimated, task.type, (rates.spfp + rates.spfn)/2, rates.spfp, rates.spfn]
 end
 
-
-
 tasks = []
 for arg in ARGS
     for p in glob(arg)
         graph_path = joinpath(p, "graph")
         subset_path = joinpath(p, "subalignments")
+        merged_path = joinpath(p, "merged")
         subset_alignment_pattern = joinpath(subset_path, "subalignment_subset_*.txt")
         graph_alignment_pattern = joinpath(graph_path, "backbone_*_mafft.txt")
+        merged_alignment_pattern = joinpath(merged_path, "merged_*_*.txt")
         tokens = splitpath(p)
         dataset = tokens[2]
         rep = tokens[3]
@@ -73,13 +73,17 @@ for arg in ARGS
         for ga = glob(graph_alignment_pattern)
             push!(tasks, Task(p, true_aln_path, ga, 2))
         end
+        for ga = glob(merged_alignment_pattern)
+            push!(tasks, Task(p, true_aln_path, ga, 3))
+        end
     end
 end
 
 # @show tasks
 # @show isempty(tasks)
+addprocs(15)
 
-results = map(execute_task, tasks)
+results = pmap(execute_task, tasks)
 println("inputpath,type,ref,error,spfp,spfn")
 for r in results
     println(join(r, ","))
