@@ -2,6 +2,7 @@ using Distributed
 using Base.Filesystem
 using Logging
 basedir = ARGS[1]
+outpath = ARGS[2]
 mstdir = joinpath(basedir, "decomposition", "mst.tre")
 
 PAIRWISE_GEN = joinpath(@__DIR__, "pairwise_merger.py")
@@ -32,7 +33,7 @@ open(merge_order_file) do f
     end
 end
 
-addprocs(10)
+addprocs(15)
 
 @everywhere function merge_aln(lhs, rhs, supp, output)
     run(`magus -np 1 --subalignments $lhs $rhs -b $supp -d $(output)_env -o $output`)
@@ -49,3 +50,7 @@ end
 end
 
 @info "Finished pairwise merging. Generated type 2 subalignments."
+MERGER_PATH = `/projects/tallis/baqiaol2/ATMerger/merger.py` 
+where_are_them = joinpath(basedir, "merged")
+run(`python3 $MERGER_PATH -d where_are_them --order $merge_order_file -o $outpath`)
+@info "Merged... Deity bless us all."
