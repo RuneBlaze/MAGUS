@@ -38,8 +38,6 @@ addprocs(10)
     run(`python3 /projects/tallis/baqiaol2/omagus/magus.py -np 1 --subalignments $lhs $rhs -b $supp -d $(output)_env -o $output`)
 end
 
-
-
 @info "Started pairwise merging"
 
 @sync @distributed for command = merge_commands
