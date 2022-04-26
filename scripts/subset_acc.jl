@@ -38,11 +38,12 @@ end
     return (spfp = r["SPFP"], spfn = r["SPFN"])
 end
 
+addprocs(15)
 tasks = []
 
 @enum AlnType subset=1 support=2
 
-struct Task
+@everywhere struct Task
     envpath
     ref
     estimated
@@ -81,7 +82,7 @@ end
 
 # @show tasks
 # @show isempty(tasks)
-addprocs(15)
+
 
 results = pmap(execute_task, tasks)
 println("inputpath,type,ref,error,spfp,spfn")
