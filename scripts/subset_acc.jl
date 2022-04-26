@@ -30,6 +30,8 @@ using Distributed
     return res
 end
 
+addprocs(15)
+
 @everywhere function obtain_rates(ref, estimated)
     fastsp_script = joinpath(@__DIR__, "restricted_fastsp.py")
     res = read(`python3 $fastsp_script -r $ref -e $estimated`, String)
@@ -38,7 +40,7 @@ end
     return (spfp = r["SPFP"], spfn = r["SPFN"])
 end
 
-addprocs(15)
+
 tasks = []
 
 @enum AlnType subset=1 support=2
