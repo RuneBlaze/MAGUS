@@ -5,7 +5,7 @@ basedir = ARGS[1]
 mstdir = joinpath(basedir, "decomposition", "mst.tre")
 
 PAIRWISE_GEN = joinpath(@__DIR__, "pairwise_merger.py")
-run(`python3 $PAIRWISE_GEN -i mstdir`)
+run(`python3 $PAIRWISE_GEN -i $mstdir`)
 
 @info "Generated info files..."
 
