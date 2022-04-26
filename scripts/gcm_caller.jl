@@ -52,5 +52,5 @@ end
 @info "Finished pairwise merging. Generated type 2 subalignments."
 MERGER_PATH = `/projects/tallis/baqiaol2/ATMerger/merger.py` 
 where_are_them = joinpath(basedir, "merged")
-run(`python3 $MERGER_PATH -d where_are_them --order $merge_order_file -o $outpath`)
+run(`python3 $MERGER_PATH -d $where_are_them --order $merge_order_file -o $outpath`)
 @info "Merged... Deity bless us all."
