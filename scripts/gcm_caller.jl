@@ -26,7 +26,7 @@ open(merge_commands_file) do f
     end
 end
 
-open(merge_order) do f
+open(merge_order_file) do f
     for l in eachline(f)
         push!(merge_order, strip(l))
     end
