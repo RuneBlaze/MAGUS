@@ -2,7 +2,7 @@ using Distributed
 using Base.Filesystem
 using Logging
 basedir = ARGS[1]
-mstdir = joinpath(basedir, "graph", "mst.tre")
+mstdir = joinpath(basedir, "decomposition", "mst.tre")
 
 PAIRWISE_GEN = joinpath(@__DIR__, "pairwise_merger.py")
 run(`python3 $PAIRWISE_GEN -i mstdir`)
