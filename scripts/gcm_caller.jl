@@ -22,13 +22,13 @@ merge_order = [] # list of strings
 
 open(merge_commands_file) do f
     for l in eachline(f)
-        merge_commands.append(split(l))
+        push!(merge_commands, split(l))
     end
 end
 
 open(merge_order) do f
     for l in eachline(f)
-        merge_order.append(strip(l))
+        push!(merge_order, strip(l))
     end
 end
 
