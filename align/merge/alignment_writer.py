@@ -112,10 +112,11 @@ def writeUnpackedAlignment(context):
         args = {"alignmentColumnsPath" : alignmentColumnsPath, "subalignmentPath" : subalignPath, "outputFile" : inducedAlignPath}
         inducedTask = task.Task(taskType = "buildInducedSubalignment", outputFile = args["outputFile"], taskArgs = args)
         inducedSubalignTasks.append(inducedTask)
+        inducedTask.run()
         #inducedTask.submitTask()
     
-    task.submitTasks(inducedSubalignTasks)            
-    for inducedTask in task.asCompleted(inducedSubalignTasks):
+    # task.submitTasks(inducedSubalignTasks)            
+    for inducedTask in inducedSubalignTasks:
         inducedAlign = sequenceutils.readFromFasta(inducedTask.outputFile, removeDashes=False)
         Configs.log("Appending induced alignment, {} sequences of length {}..".format(len(inducedAlign), len(next(iter(inducedAlign.values())).seq)))
         sequenceutils.writeFasta(inducedAlign, tempFile, append = True)   
