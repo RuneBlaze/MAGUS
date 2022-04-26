@@ -12,6 +12,10 @@ using Distributed
 
 # addprocs(WORKERS)
 
+
+
+addprocs(15)
+
 @everywhere TRUE_ALN_FILENAME = "true.indel.fa"
 # @everywhere TRUE_ALN_FILENAME = "truealign.hf.txt"
 
@@ -29,8 +33,6 @@ using Distributed
     end
     return res
 end
-
-addprocs(15)
 
 @everywhere function obtain_rates(ref, estimated)
     fastsp_script = joinpath(@__DIR__, "restricted_fastsp.py")
