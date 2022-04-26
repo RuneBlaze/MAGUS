@@ -76,7 +76,7 @@ for arg in ARGS
     end
 end
 
-@show tasks
+# @show tasks
 # @show isempty(tasks)
 
 results = map(execute_task, tasks)
