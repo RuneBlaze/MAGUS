@@ -32,11 +32,13 @@ open(merge_order_file) do f
     end
 end
 
+addprocs(10)
+
 @everywhere function merge_aln(lhs, rhs, supp, output)
     run(`python3 /projects/tallis/baqiaol2/omagus/magus.py -np 1 --subalignments $lhs $rhs -b $supp -d $(output)_env -o $output`)
 end
 
-addprocs(10)
+
 
 @info "Started pairwise merging"
 
