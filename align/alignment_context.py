@@ -29,6 +29,7 @@ class AlignmentContext:
         self.backbonePaths = []
         self.guideTree = None
         self.MST = None
+        self.subgraphs = []
         
         self.unalignedSequences = None
         #self.taxa = []

@@ -11,6 +11,7 @@ import time
 from align.decompose import initial_tree, kmh
 from helpers import treeutils, sequenceutils
 from configuration import Configs
+from foreign.enumerate_subgraphs import enumerate_subgraphs
 import treeswift as ts
 
 '''
@@ -24,6 +25,8 @@ def loadMST(context):
     subsetsDir = os.path.join(context.workingDir, "decomposition")
     p = os.path.join(subsetsDir, "mst.tre")
     context.MST = ts.read_tree_newick(p)
+    if Configs.graphBuildStrategy.startswith("subgraph"):
+        context.subgraphs = list(enumerate_subgraphs(context.MST, int(Configs.graphBuildStrategy[-1])))
 
 def decomposeSequences(context):
     time1 = time.time()

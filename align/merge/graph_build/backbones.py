@@ -23,6 +23,8 @@ def requestMafftBackbones(context):
     if strategy.startswith("mst"):
         k = int(strategy[3])
         numRuns = (len(context.subsets) - 1) * k
+    if strategy.startswith("subgraph"):
+        numRuns = len(context.subgraphs)
     if strategy.startswith("allpairs"):
         k = int(strategy[-1])
         numRuns = len(context.subsets) * (len(context.subsets) - 1) // 2 * k
@@ -73,6 +75,8 @@ def assignBackboneTaxa(context, missingBackbones):
     if strat.startswith("mst"):
         divider = 2 if strat[-1] == "-" else 1
         buildBackbonesMST(context, backbones, numTaxa, divider)
+    elif strat.startswith("subgraph"):
+        buildBackbonesSubgraph(context, backbones)
     elif strat.startswith("allpairs"):
         buildBackbonesAllPairs(context, backbones)
     if Configs.graphBuildStrategy.lower() == "eligible":
@@ -174,6 +178,17 @@ def buildBackbonesRandom(context, backbones, numTaxa):
             random.shuffle(subset)
             for taxon in subset[:numTaxa]:
                 backbone[taxon] = context.unalignedSequences[taxon]       
+
+def buildBackbonesSubgraph(context, backbones):
+    for (_, backbone), sg in zip(backbones.items(), context.subgraphs):
+        m = Configs.mafftSize
+        perSs = m // len(sg)
+        for ss_ in sg:
+            ss = ss_ - 1
+            random.shuffle(context.subsets[ss])
+            ss_taxa = context.subsets[ss][:perSs]
+            for taxon in ss_taxa:
+                backbone[taxon] = context.unalignedSequences[taxon]
 
 def buildBackbonesMST(context, backbones, numTaxa, divider = 1):
     edges = []
