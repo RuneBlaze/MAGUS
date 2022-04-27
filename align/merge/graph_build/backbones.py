@@ -24,6 +24,7 @@ def requestMafftBackbones(context):
         k = int(strategy[3])
         numRuns = (len(context.subsets) - 1) * k
     if strategy.startswith("subgraph"):
+        Configs.log(f"Subgraphs: {len(context.subgraphs)}")
         numRuns = len(context.subgraphs)
     if strategy.startswith("allpairs"):
         k = int(strategy[-1])
