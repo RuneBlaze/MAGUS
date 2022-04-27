@@ -26,6 +26,7 @@ def loadMST(context):
     p = os.path.join(subsetsDir, "mst.tre")
     context.MST = ts.read_tree_newick(p)
     if Configs.graphBuildStrategy.startswith("subgraph"):
+        Configs.log("Loading subgraphs..")
         context.subgraphs = list(enumerate_subgraphs(context.MST, int(Configs.graphBuildStrategy[-1])))
 
 def decomposeSequences(context):
