@@ -11,7 +11,7 @@ import time
 from align.decompose import initial_tree, kmh
 from helpers import treeutils, sequenceutils
 from configuration import Configs
-from foreign.enumerate_subgraphs import enumerate_subgraphs
+from foreign.enumerate_subgraphs import enumerate_subgraphs, linear_subgraphs, radial_sampling
 import treeswift as ts
 
 '''
@@ -28,6 +28,12 @@ def loadMST(context):
     if Configs.graphBuildStrategy.startswith("subgraph"):
         Configs.log("Loading subgraphs..")
         context.subgraphs = list(enumerate_subgraphs(context.MST, int(Configs.graphBuildStrategy[-1])))
+    elif Configs.graphBuildStrategy.startswith("lsubgraph"):
+        Configs.log("Loading linear subgraphs..")
+        context.subgraphs = list(linear_subgraphs(context.MST, int(Configs.graphBuildStrategy[-1])))
+    elif Configs.graphBuildStrategy.startswith("twoball"):
+        Configs.log("Loading twoballs..")
+        context.subgraphs = list(radial_sampling(context.MST))
 
 def decomposeSequences(context):
     time1 = time.time()
