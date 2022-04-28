@@ -39,7 +39,7 @@ def linear_subgraphs(t, size_limit):
             if next_frontier not in visited and not (next_frontier & covered_origins):
                 if len(next_frontier) >= size_limit:
                     covered_origins.add(origin)
-                    yield origin, next_frontier
+                    yield next_frontier
                 else:
                     queue.append((origin, next_frontier))
                 visited.add(next_frontier)
@@ -58,7 +58,7 @@ def radial_sampling(t):
             for f in evolve(singleton, adjacencies):
                 for f2 in evolve(f, adjacencies):
                     twoball |= f2
-            yield singleton, twoball
+            yield twoball
 
 def enumerate_subgraphs(t, size_limit):
     "t : Treeswift.Tree"
