@@ -46,13 +46,13 @@ def requestMafftBackbones(context):
         if Configs.graphBuildMethod == "mafft":
             from align.merge.magus_night import MagusNight
             MagusNight.request_backbone(unalignedFile, alignedFile)
-            # backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile, useFafft=Configs.fragAlignForBb)
+            backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile, useFafft=Configs.fragAlignForBb)
         elif Configs.graphBuildMethod == "magus":
             Configs.log("Using magus for backbone alignment")
             backboneTask = external_tools.runMyself(unalignedFile, os.path.join(alignedFile + "_env"), alignedFile, None)
         else:
             assert False
-        # context.backboneTasks.append(backboneTask)
+        context.backboneTasks.append(backboneTask)
     
     if not Configs.graphBuildHmmExtend:
         for file in list(missingBackboneFiles.keys()) + context.backbonePaths:
