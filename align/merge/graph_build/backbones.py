@@ -76,7 +76,7 @@ def assignBackboneTaxa(context, missingBackbones):
     if strat.startswith("mst"):
         divider = 2 if strat[-1] == "-" else 1
         buildBackbonesMST(context, backbones, numTaxa, divider)
-    elif strat.startswith("subgraph"):
+    elif strat.startswith("subgraph") or strat.startswith("lsubgraph") or strat.startswith("twoball"):
         buildBackbonesSubgraph(context, backbones)
     elif strat.startswith("allpairs"):
         buildBackbonesAllPairs(context, backbones)
