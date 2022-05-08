@@ -1,25 +1,35 @@
-# compress alignment. Removing columns that are insrtion only or 99.9% gaps.
 import argparse
-from Bio import AlignIO
-from Bio.Seq import Seq
+from numba import jit
 import numpy as np
+from Bio import SeqIO
+
+# fast alignment masker that uses numba
+# and also takes into account 'X' characters for protein datasets
+# (TODO: handle NT data)
+
+@jit(nopython=True)
+def count_gaps(seq, gapcounts):
+    for i, c in enumerate(seq):
+        if c == 45 or c == 88:
+            gapcounts[i] += 1
 
 def compress_alignment(input, output):
-    A = AlignIO.read(open(input), "fasta")
-    removable_idx = [] # removable column idx
-    N = A.get_alignment_length()
-    for i in range(N):
-        row = A[:, i]
-        if row.count('-') == len(row) - 1:
-            removable_idx.append(i)
-        elif row.count('-') >= len(row) * 0.999:
-            removable_idx.append(i)
-    for record in A:
-        stringview = np.array(list(record.seq))
-        stringview = np.delete(stringview, removable_idx)
-        record.seq = Seq(''.join(list(stringview)))
-    with open(output, "w+") as fh:
-        AlignIO.write(A, fh, "fasta")
+    tt = 0
+    for i, record in enumerate(SeqIO.parse(input, 'fasta')):
+        ba = bytearray(record.seq._data)
+        if i == 0:
+            C = len(ba)
+            gapcounts = np.zeros(C, dtype=np.int32)
+        count_gaps(ba, gapcounts)
+        tt += 1
+    threshold = tt * 0.999
+    with open(output, 'w+') as fh:
+        for i, record in enumerate(SeqIO.parse(input, 'fasta')):
+            fh.write(">{}\n".format(record.id))
+            for j, c in enumerate(record.seq._data):
+                if gapcounts[j] < threshold:
+                    fh.write(chr(c))
+            fh.write("\n")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Remove columns that are insertion only or 99.9% gaps, a la PASTA.')

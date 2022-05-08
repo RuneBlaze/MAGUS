@@ -14,6 +14,7 @@ from helpers import sequenceutils, hmmutils, treeutils
 from tasks import task
 from tools import external_tools
 from configuration import Configs
+from mask999 import compress_alignment
 
 '''
 Different options for estimating a guide tree.
@@ -43,8 +44,11 @@ def buildInitialTree(context, workingDir, treeType):
     
     if treeType is None or treeType.lower() == "fasttree": 
         Configs.log("Building PASTA-style FastTree initial tree on {} with skeleton size {}..".format(context.sequencesPath, Configs.decompositionSkeletonSize))
+        notMaskedAlignPath = os.path.join(tempDir, "initial_align.unmasked.txt")
         alignPath = os.path.join(tempDir, "initial_align.txt")
-        buildInitialAlignment(context.unalignedSequences, tempDir, Configs.decompositionSkeletonSize, None, alignPath)
+        buildInitialAlignment(context.unalignedSequences, tempDir, Configs.decompositionSkeletonSize, None, notMaskedAlignPath)
+        Configs.log("Masking Alignment with 99.9% gappy sequences...")
+        compress_alignment(notMaskedAlignPath, alignPath)
         if Configs.outputInitialAlignment:
             buildNaiveAlignment(context.unalignedSequences, tempDir, Configs.outputInitialAlignment)
         external_tools.runFastTree(alignPath, tempDir, outputTreePath, "fast").run()
