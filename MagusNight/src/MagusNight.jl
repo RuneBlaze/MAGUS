@@ -260,7 +260,7 @@ function min_clusters_search(g::AlnGraph)
     queue_idxs = TDict{Int,Int}()
     cluster_breaks = TDict{Tuple{Int,Int},Vector{Int}}()
     max_frontier = TDict{Int,Int}()
-    visited_states = Set{NTuple{25,Int64}}()
+    visited_states = Set{NTuple{length(g.subaln_lengths),Int64}}()
     maximal_cut = TDict{Int,Int}()
     state_counter = 0
     aggression = 1.0
