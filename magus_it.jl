@@ -44,7 +44,7 @@ function main()
         output_treename = "$(output_path).it$(i).tre"
         env_dir = "$(dir_path)_it$(i)"
         initial_tree_arg = i == 1 ? [] : ["-t", "$(output_path).it$(i-1).tre"]
-        if i <= 2
+        if i <= 4
             run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg --graphclustermethod upgma --graphtracemethod None`)
         else
             run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
