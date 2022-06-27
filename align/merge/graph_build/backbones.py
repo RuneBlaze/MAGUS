@@ -30,7 +30,11 @@ def requestMafftBackbones(context):
             context.backboneExtend.add(alignedFile)
     assignBackboneTaxa(context, missingBackboneFiles)
     for unalignedFile, alignedFile in missingBackboneFiles.items():
-        backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile)
+        if Configs.mafftSize >= 400:
+            Configs.log("Running GCM137 on {}..".format(unalignedFile))
+            backboneTask = external_tools.runGcmC(unalignedFile, None, Configs.workingDir, alignedFile, Configs.numCores)
+        else:
+            backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile)
         context.backboneTasks.append(backboneTask)
     
     if not Configs.graphBuildHmmExtend:
@@ -79,8 +83,13 @@ def assignBackboneTaxa(context, missingBackbones):
     
     elif Configs.graphBuildStrategy.lower() == "coverage2":
         buildBackbonesCoverage2(context, backbones, numTaxa)                          
-                    
+    
+    import treeswift as ts
+    tree_path = os.path.join(context.workingDir, "decomposition", "initial_tree", "initial_tree.tre")
+    tree = ts.read_tree_newick(tree_path)
     for file, backbone in backbones.items():
+        keep_taxa = list(backbone.keys())
+        tree.extract_tree_with(keep_taxa).write_tree_newick(file + ".tre")
         sequenceutils.writeFasta(backbone, file)
     
     

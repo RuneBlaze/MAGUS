@@ -70,6 +70,7 @@ class Configs:
     
     clustalPath = relative_to_me("tools/clustal/clustalo")
     mafftPath = which("mafft") or relative_to_me("tools/mafft/mafft")
+    gcm137Path = relative_to_me("foreign/gcm_with_cheese.jl")
     mclPath = which("mcl") or relative_to_me("tools/mcl/bin/mcl")
     mlrmclPath = relative_to_me("tools/mlrmcl/mlrmcl")
     hmmalignPath = which("hmmalign") or relative_to_me("tools/hmmer/hmmalign")

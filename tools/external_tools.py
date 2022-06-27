@@ -54,6 +54,12 @@ def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
+def runGcmC(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
+    tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
+    args = ["julia", Configs.gcm137Path, fastaPath, tempPath]
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
 def runMafftGuideTree(fastaPath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
     treeFile = os.path.join(os.path.dirname(fastaPath),  "{}.tree".format(os.path.basename(fastaPath)))
