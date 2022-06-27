@@ -54,7 +54,7 @@ function main()
             if master_mode
                 @info "Compressing alignment: $(output_filename) -> $(output_filename).compressed"
                 run(`ogcat mask -p 0.999 $output_filename -o $(output_filename).compressed`)
-                task = external_tools.runFastTree(output_filename * ".compressed", env_dir, output_treename, "fast")
+                task = external_tools.runFastTree(output_filename * ".compressed", env_dir, output_treename)
                 taskArgs = task.taskArgs
                 taskArgs["workingDir"] = "."
                 task.taskArgs = taskArgs

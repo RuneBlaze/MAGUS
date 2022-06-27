@@ -86,6 +86,9 @@ def assignBackboneTaxa(context, missingBackbones):
     
     import treeswift as ts
     tree_path = os.path.join(context.workingDir, "decomposition", "initial_tree", "initial_tree.tre")
+    if not os.path.isfile(tree_path):
+        tree_path = Configs.guideTree
+        assert os.path.isfile(tree_path), "Guide tree not found: {}".format(tree_path)
     tree = ts.read_tree_newick(tree_path)
     for file, backbone in backbones.items():
         keep_taxa = list(backbone.keys())
