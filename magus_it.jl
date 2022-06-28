@@ -17,8 +17,9 @@ function main()
     its_ix = -1
     its_times = -1
     master_mode = "MAGUS_MASTER" ∈ keys(ENV)
+    #master_mode = true
     if master_mode
-        info!("Running in master mode. Will do the FastTree things myself.")
+        @info "Running in master mode. Will do the FastTree things myself."
     end
     for (j, i) = enumerate(magus_args)
         if i == "-o"
@@ -44,11 +45,11 @@ function main()
         output_treename = "$(output_path).it$(i).tre"
         env_dir = "$(dir_path)_it$(i)"
         initial_tree_arg = i == 1 ? [] : ["-t", "$(output_path).it$(i-1).tre"]
-        if i <= 4
-            run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg --graphclustermethod upgma --graphtracemethod None`)
-        else
+        #if i <= 4
+        #    run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg --graphclustermethod upgma --graphtracemethod None`)
+        #else
             run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
-        end
+        #end
         if i < its_times # if we are not at the last iteration
             # we estimate the tree
             if master_mode

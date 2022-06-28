@@ -23,7 +23,8 @@ def runCommand(**kwargs):
         Configs.error("Output: {}".format(runner.stdout))
         raise
     for srcPath, destPath in kwargs.get("fileCopyMap", {}).items():
-        shutil.move(srcPath, destPath)
+        if not os.path.exists(destPath):
+            shutil.move(srcPath, destPath)
 
 def runClustalOmegaGuideTree(fastaPath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
@@ -74,7 +75,7 @@ def runMcl(matrixPath, inflation, workingDir, outputPath):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
     args = [Configs.mclPath, matrixPath, "--abc", "-o", tempPath]
     if inflation is not None:
-        args.extend(["-I", str(inflation), '-te', Configs.numCores])
+        args.extend(["-I", str(inflation), '-te', str(Configs.numCores)])
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
