@@ -88,13 +88,20 @@ def assignBackboneTaxa(context, missingBackbones):
     tree_path = os.path.join(context.workingDir, "decomposition", "initial_tree", "initial_tree.tre")
     if not os.path.isfile(tree_path):
         tree_path = Configs.guideTree
-        assert os.path.isfile(tree_path), "Guide tree not found: {}".format(tree_path)
-    tree = ts.read_tree_newick(tree_path)
+        # assert os.path.isfile(tree_path), "Guide tree not found: {}".format(tree_path)
+    if os.path.isfile(tree_path):
+        tree = ts.read_tree_newick(tree_path)
+    else:
+        Configs.log("Guide tree not found: {}. Using MAFFT auto to get some sort of tree...".format(tree_path))
+        tree = None
     for file, backbone in backbones.items():
         keep_taxa = list(backbone.keys())
-        tree.extract_tree_with(keep_taxa).write_tree_newick(file + ".tre")
         sequenceutils.writeFasta(backbone, file)
-    
+        if tree:
+            tree.extract_tree_with(keep_taxa).write_tree_newick(file + ".tre")
+        else:
+            external_tools.runMafftAuto(file, Configs.workingDir, file + ".mauto.aln").run()
+            external_tools.runFastTree(file + ".mauto.aln", Configs.workingDir, file + ".tre", "noml").run()
     
 def buildBackbonesRandom(context, backbones, numTaxa):
     Configs.log("Preparing {} backbones with {} RANDOM sequences per subset..".format(len(backbones), numTaxa))

@@ -55,6 +55,8 @@ def buildDecomposition(context, subsetsDir):
     if (Configs.decompositionStrategy == "random" or context.guideTree == "random") and Configs.outputPath == context.outputFile:
         context.subsetPaths = randomDecomposition(subsetsDir, context.unalignedSequences, Configs.decompositionMaxNumSubsets)
         
+    elif Configs.guideTree == "random":
+        context.subsetPaths = randomDecomposition(subsetsDir, context.unalignedSequences, Configs.decompositionMaxNumSubsets)
     elif Configs.decompositionStrategy == "kmh":
         Configs.log("Decomposing {} with KMH..".format(context.sequencesPath))
         Configs.log("Targetting {} subsets..".format(Configs.decompositionMaxNumSubsets))
