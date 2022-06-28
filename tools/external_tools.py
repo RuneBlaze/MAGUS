@@ -54,6 +54,21 @@ def runMafft(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
+def runMafftAuto(fastaPath, workingDir, outputPath, threads = 1):
+    tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
+    args = [Configs.mafftPath, "--auto",
+            "--quiet", "--thread", str(threads), "--anysymbol"]
+    args.extend([fastaPath, ">", tempPath])
+    # print(args)
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
+def maskAlignment(fastaPath, workingDir, outputPath, threshold = 0.999):
+    tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
+    args = ['ogcat', 'mask', '-p', str(threshold), fastaPath, '-o', tempPath]
+    taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
+    return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
+
 def runGcmC(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
     args = ["julia", Configs.gcm137Path, fastaPath, tempPath]
