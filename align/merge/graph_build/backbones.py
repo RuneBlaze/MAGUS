@@ -30,7 +30,7 @@ def requestMafftBackbones(context):
             context.backboneExtend.add(alignedFile)
     assignBackboneTaxa(context, missingBackboneFiles)
     for unalignedFile, alignedFile in missingBackboneFiles.items():
-        if Configs.mafftSize >= 400:
+        if Configs.mafftSize >= 400 and not Configs.exp:
             Configs.log("Running GCM137 on {}..".format(unalignedFile))
             backboneTask = external_tools.runGcmC(unalignedFile, None, Configs.workingDir, alignedFile, Configs.numCores)
         else:
