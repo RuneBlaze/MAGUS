@@ -23,6 +23,8 @@ def runCommand(**kwargs):
         Configs.error("Output: {}".format(runner.stdout))
         raise
     for srcPath, destPath in kwargs.get("fileCopyMap", {}).items():
+        if os.path.exists(destPath):
+            os.remove(destPath)
         if not os.path.exists(destPath):
             shutil.move(srcPath, destPath)
 
