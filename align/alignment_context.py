@@ -50,7 +50,7 @@ class AlignmentContext:
             os.makedirs(self.workingDir)
     
     def awaitSubalignments(self):
-        task.awaitTasks(self.subalignmentTasks)
+        [task.get(blocking=True) for task in self.subalignmentTasks]
     
     def initializeSequences(self):
         self.unalignedSequences = {}
@@ -96,3 +96,8 @@ class AlignmentContext:
     def __exit__(self, excType, excVal, excTb):
         manager.TaskManager.contextStack.pop()
     
+    def drop(self):
+        for a in self.backboneTasks:
+            a.revoke()
+        for a in self.subalignmentTasks:
+            a.revoke()

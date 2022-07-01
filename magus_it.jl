@@ -6,9 +6,15 @@ using PyCall
 using Base.Filesystem
 using Logging
 pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
+ENV["HUEY_BROKER"] = "/home/baqiaol2/scratch/huey.db"
 function main()
+    cd(@__DIR__) do
+        cmd = `huey_consumer.py tasks.remote_tasks.huey -w 3 -k process`
+        for _=1:3
+            run(cmd; wait = false)
+        end
+    end
     external_tools = pyimport("tools.external_tools")
-    # argument parsing, extremely ugly
     output_path = nothing
     output_ix = -1
     dir_ix = -1
@@ -16,11 +22,6 @@ function main()
     magus_args = copy(ARGS)
     its_ix = -1
     its_times = -1
-    master_mode = "MAGUS_MASTER" ∈ keys(ENV)
-    #master_mode = true
-    if master_mode
-        @info "Running in master mode. Will do the FastTree things myself."
-    end
     for (j, i) = enumerate(magus_args)
         if i == "-o"
             output_ix = j
@@ -45,35 +46,19 @@ function main()
         output_treename = "$(output_path).it$(i).tre"
         env_dir = "$(dir_path)_it$(i)"
         initial_tree_arg = i == 1 ? [] : ["-t", "$(output_path).it$(i-1).tre"]
-        #if i <= 4
-        #    run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg --graphclustermethod upgma --graphtracemethod None`)
-        #else
-            run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
-        #end
+        run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
         if i < its_times # if we are not at the last iteration
             # we estimate the tree
-            if master_mode
-                @info "Compressing alignment: $(output_filename) -> $(output_filename).compressed"
-                run(`ogcat mask -p 0.999 $output_filename -o $(output_filename).compressed`)
-                task = external_tools.runFastTree(output_filename * ".compressed", env_dir, output_treename)
-                taskArgs = task.taskArgs
-                taskArgs["workingDir"] = "."
-                task.taskArgs = taskArgs
-                task.run()
-            else
-                @info "Waiting for FastTree to finish on master"
-                while !isfile(output_treename)
-                    @info "Waiting..."
-                    sleep(5)
-                end
-                @info "Joining later..."
-                sleep(8)
-            end
+            @info "Compressing alignment: $(output_filename) -> $(output_filename).compressed"
+            run(`ogcat mask -p 0.999 $output_filename -o $(output_filename).compressed`)
+            task = external_tools.runFastTree(output_filename * ".compressed", env_dir, output_treename)
+            taskArgs = task.taskArgs
+            taskArgs["workingDir"] = "."
+            task.taskArgs = taskArgs
+            task.run()
         else
-            if master_mode
-                # last iteration, move the output file to the output path
-                cp(output_filename, output_path)
-            end
+            # last iteration, move the output file to the output path
+            cp(output_filename, output_path)
         end
         @info "Iteration $i finished."
     end

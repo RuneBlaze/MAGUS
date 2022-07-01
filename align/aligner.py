@@ -7,13 +7,17 @@ Created on May 29, 2020
 import os
 import shutil
 
+from celery import group
+
 from align.alignment_context import AlignmentContext
 from align.decompose.decomposer import decomposeSequences 
 from align.merge.merger import mergeSubalignments
 from tools import external_tools
 from configuration import Configs
 from helpers import sequenceutils
-from tasks import task
+from tasks import remote_tasks, task
+import atexit
+
 
 '''
 Alignments are treated as "tasks", units of work that are written out to task files and 
@@ -37,8 +41,13 @@ def runAlignmentTask(**kwargs):
     The standard MAGUS task: 
     decompose the data into subsets, align each subset, and merge the subalignments.
     '''
-    
+
+    def revoke_remote_calls(context):
+        Configs.log("Revoking remote MAFFT calls...")
+        context.drop()
+
     with AlignmentContext(**kwargs) as context:
+        atexit.register(revoke_remote_calls, context)
         if context.sequencesPath is not None:
             Configs.log("Aligning sequences {}".format(context.sequencesPath))
         
@@ -50,6 +59,7 @@ def runAlignmentTask(**kwargs):
         
         alignSubsets(context)
         mergeSubalignments(context)
+        atexit.unregister(revoke_remote_calls)
 
 def alignSubsets(context):
     if len(context.subalignmentPaths) > 0:
@@ -73,7 +83,8 @@ def alignSubsets(context):
              
         elif len(subset) <= mafftThreshold or not Configs.recurse:
             Configs.log("Subset has {}/{} sequences, aligning with MAFFT..".format(len(subset), mafftThreshold))            
-            subalignmentTask = external_tools.buildMafftAlignment(file, subalignmentPath)
+            #subalignmentTask = external_tools.buildMafftAlignment(file, subalignmentPath)
+            subalignmentTask = remote_tasks.remote_mafft_linsi(file, subalignmentPath)
             context.subalignmentTasks.append(subalignmentTask)
             
         else:
@@ -83,6 +94,5 @@ def alignSubsets(context):
                                                     "sequencesPath" : file, "guideTree" : Configs.recurseGuideTree})   
             context.subalignmentTasks.append(subalignmentTask)
                 
-    task.submitTasks(context.subalignmentTasks)
     Configs.log("Prepared {} subset alignment tasks..".format(len(context.subalignmentTasks)))
 

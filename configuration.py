@@ -41,7 +41,6 @@ class Configs:
     decompositionMaxSubsetSize = 50
     decompositionStrategy = "pastastyle"
     decompositionSkeletonSize = 300
-    #decompositionKmhIterations = 1
     
     graphBuildMethod = "mafft"
     graphBuildHmmExtend = False

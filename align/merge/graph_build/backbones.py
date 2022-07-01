@@ -9,8 +9,10 @@ import random
 import heapq
 import math
 
+from celery import group
+
 from helpers import sequenceutils
-from tasks import task
+from tasks import remote_tasks, task
 from configuration import Configs
 from tools import external_tools
 
@@ -32,17 +34,15 @@ def requestMafftBackbones(context):
     for unalignedFile, alignedFile in missingBackboneFiles.items():
         if Configs.mafftSize >= 400 and not Configs.exp:
             Configs.log("Running GCM137 on {}..".format(unalignedFile))
-            backboneTask = external_tools.runGcmC(unalignedFile, None, Configs.workingDir, alignedFile, Configs.numCores)
+            backboneTask = remote_tasks.remote_gcm(unalignedFile, alignedFile)
         else:
-            backboneTask = external_tools.buildMafftAlignment(unalignedFile, alignedFile)
+            backboneTask = remote_tasks.remote_mafft_linsi(unalignedFile, alignedFile)
         context.backboneTasks.append(backboneTask)
-    
+
     if not Configs.graphBuildHmmExtend:
         for file in list(missingBackboneFiles.keys()) + context.backbonePaths:
             backbone = sequenceutils.readFromFasta(file)
-            context.backboneTaxa.update(backbone)        
-            
-    task.submitTasks(context.backboneTasks)    
+            context.backboneTaxa.update(backbone)
     
 def assignBackboneTaxa(context, missingBackbones):
     if len(missingBackbones) == 0:

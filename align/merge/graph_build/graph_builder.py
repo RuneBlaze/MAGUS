@@ -96,7 +96,9 @@ def requestMafftBackbones(context):
                 
 def buildMatrix(context):
     addedBackbones = set()
-    for backboneTask in task.asCompleted(context.backboneTasks):
+
+    for backboneTask in context.backboneTasks:
+        backboneTask = backboneTask.get(blocking=True)
         addAlignmentFileToGraph(context, backboneTask.outputFile)
         addedBackbones.add(backboneTask.outputFile)
     

@@ -8,10 +8,11 @@ import time
 import argparse
 import sys
 import traceback
-
+import os
 from align.aligner import mainAlignmentTask
 from configuration import buildConfigs, Configs
 from tasks import manager
+
 
 def main():   
     '''
@@ -23,8 +24,6 @@ def main():
     args = parseArgs()
     buildConfigs(args)    
     Configs.log("MAGUS was run with: {}".format(" ".join(sys.argv)))
-    # from julia import Base
-    # Configs.log(f"Julia interface configured: Base.sind= {Base.sind(90)}")
     try:
         manager.startTaskManager()
         mainAlignmentTask()
@@ -138,7 +137,6 @@ def parseArgs():
     parser.add_argument("--alignsizelimit", type=float,
                         help="Size threshold for alignment compression (in GB)", required=False, default=100)
     
-    # parser.add_argument("-j", "--julia", action="store_true", help="use Julia to speed-up the trace-finding process")
     parser.add_argument("--keepOrder", action="store_false", help="during the UPGMA clustering, ensure that clusters have valid order")
     parser.add_argument("--zeroWeight", action="store_true", help="use zero-averaged weight in the UPGMA clustering step")
     parser.add_argument("--exp", action="store_true", help="enable experimental features")
