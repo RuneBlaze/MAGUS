@@ -9,8 +9,8 @@ pushfirst!(PyVector(pyimport("sys")["path"]), @__DIR__)
 ENV["HUEY_BROKER"] = "/home/baqiaol2/scratch/huey.db"
 function main()
     cd(@__DIR__) do
-        cmd = `huey_consumer.py tasks.remote_tasks.huey -w 3 -k process`
-        for _=1:3
+        cmd = `huey_consumer.py tasks.remote_tasks.huey -n -w 3 -k process`
+        for _ = 1:3
             run(cmd; wait = false)
         end
     end
