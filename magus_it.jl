@@ -49,6 +49,7 @@ function main()
         run(`fmagus $magus_args -o $(output_filename) -d $(env_dir) $initial_tree_arg`)
         if i < its_times # if we are not at the last iteration
             # we estimate the tree
+            @assert isfile("$(output_filename)")
             @info "Compressing alignment: $(output_filename) -> $(output_filename).compressed"
             run(`ogcat mask -p 0.999 $output_filename -o $(output_filename).compressed`)
             task = external_tools.runFastTree(output_filename * ".compressed", env_dir, output_treename)

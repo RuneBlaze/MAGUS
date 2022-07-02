@@ -1,8 +1,7 @@
 from tools import external_tools
 import os
-from huey import SqliteHuey
-
-huey = SqliteHuey(filename="/home/baqiaol2/scratch/huey.db")
+from huey import RedisHuey
+huey = RedisHuey(host=open('/projects/tallis/baqiaol2/multi/hostname.txt').read().strip(), port=6379, password='MAGUS')
 
 @huey.task()
 def remote_mafft_linsi(input_path, output_path):
