@@ -9,7 +9,7 @@ import random
 import heapq
 import math
 
-from celery import group
+#from celery import group
 
 from helpers import sequenceutils
 from tasks import remote_tasks, task

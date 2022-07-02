@@ -7,8 +7,6 @@ Created on May 29, 2020
 import os
 import shutil
 
-from celery import group
-
 from align.alignment_context import AlignmentContext
 from align.decompose.decomposer import decomposeSequences 
 from align.merge.merger import mergeSubalignments
