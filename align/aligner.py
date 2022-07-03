@@ -27,9 +27,10 @@ def mainAlignmentTask():
     args = {"workingDir" : Configs.workingDir, "outputFile" : Configs.outputPath,
             "subalignmentPaths" : Configs.subalignmentPaths, "sequencesPath" : Configs.sequencesPath,
             "backbonePaths" : Configs.backbonePaths, "guideTree" : Configs.guideTree}
-    task = createAlignmentTask(args)
-    task.submitTask()
-    task.awaitTask()
+    runAlignmentTask(**args)
+    # task = createAlignmentTask(args)
+    # task.submitTask()
+    # task.awaitTask()
     
 def createAlignmentTask(args):
     return task.Task(taskType = "runAlignmentTask", outputFile = args["outputFile"], taskArgs = args)
