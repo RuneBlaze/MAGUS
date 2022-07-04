@@ -28,8 +28,8 @@ for unaligned_path in glob(os.path.join(ENV_PATH, "*", "*.unaln.fa")):
     r = remote_mafft_linsi(os.path.abspath(unaligned_path), os.path.abspath(aligned_path))
     receipts.append(r)
 for r in receipts:
-    r.get(blocking=True)
-    print(f"Alignment complete: {r.outputFile}")
+    t = r.get(blocking=True)
+    print(f"Alignment complete: {t.outputFile}")
 aligned_constraints = glob(os.path.join(ENV_PATH, "constraints", "*.aln.fa"))
 aligned_glues = glob(os.path.join(ENV_PATH, "glues", "*.aln.fa"))
 subprocess.run(['gcm137', 'merge', '-i', *aligned_constraints, '-g', *aligned_glues, '-o', OUTPUT_PATH])
