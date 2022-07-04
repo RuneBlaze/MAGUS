@@ -72,9 +72,9 @@ def maskAlignment(fastaPath, workingDir, outputPath, threshold = 0.999):
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
-def runGcmC(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
+def runGcmC(fastaPath, support, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
-    args = ["pypy3", Configs.gcm137Path, '-i', fastaPath, '-o', tempPath]
+    args = ["pypy3", Configs.gcm137Path, '-i', fastaPath, '-s', str(support), '-o', tempPath]
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 

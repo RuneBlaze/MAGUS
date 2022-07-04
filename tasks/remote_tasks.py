@@ -10,7 +10,7 @@ def remote_mafft_linsi(input_path, output_path):
     return t
 
 @huey.task()
-def remote_gcm(input_path, output_path):
-    t = external_tools.runGcmC(input_path, None, os.path.dirname(output_path), output_path, 4)
+def remote_gcm(input_path, support_size, output_path):
+    t = external_tools.runGcmC(input_path, support_size, os.path.dirname(output_path), output_path, 4)
     t.run()
     return t

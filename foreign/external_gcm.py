@@ -11,6 +11,7 @@ sys.path.insert(0, parentdir)
 from tasks.remote_tasks import remote_mafft_linsi
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--input', type=str, help='Path to input unaligned sequences', required=True)
+parser.add_argument('-s', '--support', type=int, help='Support size', required=True)
 parser.add_argument('-o', '--output', type=str, help='Path to output alignment', required=True)
 args = parser.parse_args()
 
@@ -18,8 +19,9 @@ INPUT_PATH = args.input
 OUTPUT_PATH = args.output
 ENV_PATH = os.path.relpath(args.input + '_env')
 SUBTREE_PATH = INPUT_PATH + '.tre'
+SUPPORT_SIZE = max(args.support, 100)
 assert os.path.isfile(SUBTREE_PATH)
-subprocess.run(['gcm137', 'slice', '-g', '10x200', '-s', '100', '-i', INPUT_PATH, '-t', SUBTREE_PATH, '-o', ENV_PATH])
+subprocess.run(['gcm137', 'slice', '-g', f'10x{SUPPORT_SIZE}', '-s', '100', '-i', INPUT_PATH, '-t', SUBTREE_PATH, '-o', ENV_PATH])
 receipts = []
 for unaligned_path in glob(os.path.join(ENV_PATH, "*", "*.unaln.fa")):
     print(f"Aligning: {unaligned_path}")

@@ -34,7 +34,7 @@ def requestMafftBackbones(context):
     for unalignedFile, alignedFile in missingBackboneFiles.items():
         if Configs.mafftSize >= 400 and not Configs.exp:
             Configs.log("Running GCM137 on {}..".format(unalignedFile))
-            backboneTask = remote_tasks.remote_gcm(unalignedFile, alignedFile)
+            backboneTask = remote_tasks.remote_gcm(unalignedFile, Configs.mafftSize // 5, alignedFile)
         else:
             backboneTask = remote_tasks.remote_mafft_linsi(unalignedFile, alignedFile)
         context.backboneTasks.append(backboneTask)
