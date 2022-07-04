@@ -19,7 +19,7 @@ OUTPUT_PATH = args.output
 ENV_PATH = os.path.relpath(args.input + '_env')
 SUBTREE_PATH = INPUT_PATH + '.tre'
 assert os.path.isfile(SUBTREE_PATH)
-subprocess.run(['gcm137', 'slice', '-g', '10x150', '-s', '100', '-i', INPUT_PATH, '-t', SUBTREE_PATH, '-o', ENV_PATH])
+subprocess.run(['gcm137', 'slice', '-g', '10x200', '-s', '100', '-i', INPUT_PATH, '-t', SUBTREE_PATH, '-o', ENV_PATH])
 receipts = []
 for unaligned_path in glob(os.path.join(ENV_PATH, "*", "*.unaln.fa")):
     print(f"Aligning: {unaligned_path}")
