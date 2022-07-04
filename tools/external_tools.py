@@ -74,7 +74,7 @@ def maskAlignment(fastaPath, workingDir, outputPath, threshold = 0.999):
 
 def runGcmC(fastaPath, subtablePath, workingDir, outputPath, threads = 1):
     tempPath = os.path.join(os.path.dirname(outputPath), "temp_{}".format(os.path.basename(outputPath)))
-    args = ["julia", Configs.gcm137Path, fastaPath, tempPath]
+    args = ["pypy3", Configs.gcm137Path, '-i', fastaPath, '-o', tempPath]
     taskArgs = {"command" : subprocess.list2cmdline(args), "fileCopyMap" : {tempPath : outputPath}, "workingDir" : workingDir}
     return Task(taskType = "runCommand", outputFile = outputPath, taskArgs = taskArgs)
 
