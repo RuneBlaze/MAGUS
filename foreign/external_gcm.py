@@ -25,7 +25,7 @@ for unaligned_path in glob(os.path.join(ENV_PATH, "*", "*.unaln.fa")):
     print(f"Aligning: {unaligned_path}")
     d, bn = os.path.split(unaligned_path)
     aligned_path = os.path.join(d, bn.replace('.unaln.fa', '.aln.fa'))
-    r = remote_mafft_linsi(unaligned_path, aligned_path)
+    r = remote_mafft_linsi(os.path.abspath(unaligned_path), os.path.abspath(aligned_path))
     receipts.append(r)
 for r in receipts:
     r.get(blocking=True)
